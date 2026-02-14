@@ -1,0 +1,15 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "cc.irori.refixes.early.mixin",
+    "mixins": [
+        "MixinArchetypeChunk",
+        "MixinBeaconAddRemoveSystem",
+        "MixinBlockComponentChunk",
+        "MixinBlockHealthSystem",
+        "MixinCommandBuffer",
+        "MixinGamePacketHandler",
+        "MixinInteractionChain",
+        "MixinInteractionManager"
+    ]
+}

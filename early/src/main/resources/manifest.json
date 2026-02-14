@@ -1,0 +1,19 @@
+{
+    "Group": "IroriPowered",
+    "Name": "Refixes-Early",
+    "Version": "${version}",
+    "Website": "https://www.irori.cc/",
+    "Description": "TBD",
+    "Authors": [
+        {
+            "Name": "KabanFriends",
+            "Url": "https://github.com/KabanFriends"
+        }
+    ],
+    "ServerVersion": "*",
+    "Dependencies": {},
+    "OptionalDependencies": {},
+    "Mixins": [
+        "refixes.mixins.json"
+    ]
+}
