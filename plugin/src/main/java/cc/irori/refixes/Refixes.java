@@ -1,7 +1,6 @@
 package cc.irori.refixes;
 
 import cc.irori.refixes.config.impl.RefixesConfig;
-import cc.irori.refixes.config.impl.SanitizerConfig;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.util.Config;
