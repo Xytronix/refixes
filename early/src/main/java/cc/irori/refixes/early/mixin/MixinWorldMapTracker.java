@@ -22,11 +22,7 @@ public abstract class MixinWorldMapTracker {
     @Shadow
     protected abstract void unloadImages(int chunkViewRadius, int playerChunkX, int playerChunkZ);
 
-    @Inject(
-            method = "unloadImages",
-            at = @At("HEAD"),
-            cancellable = true
-    )
+    @Inject(method = "unloadImages", at = @At("HEAD"), cancellable = true)
     private void refixes$wrapUnloadImages(int chunkViewRadius, int playerChunkX, int playerChunkZ, CallbackInfo ci) {
         if (refixes$WRAPPING.get()) {
             // Run the original method

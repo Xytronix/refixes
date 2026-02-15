@@ -14,18 +14,13 @@ public class MixinTickingThread {
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
-    @Redirect(
-            method = "stop",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/lang/Thread;stop()V"
-            )
-    )
+    @Redirect(method = "stop", at = @At(value = "INVOKE", target = "Ljava/lang/Thread;stop()V"))
     private void refixes$wrapStop(Thread instance) {
         try {
             instance.stop();
         } catch (UnsupportedOperationException e) {
-            refixes$LOGGER.atWarning().log("TickingThread#stop(): Replaced Thread.stop() with Thread.interrupt() (Java 21+)");
+            refixes$LOGGER.atWarning().log(
+                    "TickingThread#stop(): Replaced Thread.stop() with Thread.interrupt() (Java 21+)");
             instance.interrupt();
         }
     }

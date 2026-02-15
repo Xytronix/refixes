@@ -21,12 +21,13 @@ public class MixinTrackedPlacementOnAddRemove {
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
-    @Inject(
-            method = "onEntityRemove",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void refixes$fixOnEntityRemove(Ref<ChunkStore> ref, RemoveReason reason, Store<ChunkStore> store, CommandBuffer<ChunkStore> commandBuffer, CallbackInfo ci) {
+    @Inject(method = "onEntityRemove", at = @At("HEAD"), cancellable = true)
+    private void refixes$fixOnEntityRemove(
+            Ref<ChunkStore> ref,
+            RemoveReason reason,
+            Store<ChunkStore> store,
+            CommandBuffer<ChunkStore> commandBuffer,
+            CallbackInfo ci) {
         ci.cancel();
 
         if (reason != RemoveReason.REMOVE) {
@@ -39,7 +40,8 @@ public class MixinTrackedPlacementOnAddRemove {
         }
         String blockName = ((MixinTrackedPlacementAccessor) tracked).getBlockName();
         if (blockName == null || blockName.isEmpty()) {
-            refixes$LOGGER.atWarning().log("TrackedPlacement.OnAddRemove#onEntityRemove(): Block name is null or empty");
+            refixes$LOGGER.atWarning().log(
+                    "TrackedPlacement.OnAddRemove#onEntityRemove(): Block name is null or empty");
             return;
         }
 

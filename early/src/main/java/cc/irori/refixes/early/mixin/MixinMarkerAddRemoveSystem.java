@@ -18,15 +18,17 @@ public class MixinMarkerAddRemoveSystem {
 
     @Redirect(
             method = "onEntityRemove",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/hypixel/hytale/server/spawning/spawnmarkers/SpawnMarkerEntity;getNpcReferences()[Lcom/hypixel/hytale/server/core/entity/reference/InvalidatablePersistentRef;"
-            )
-    )
+            at =
+                    @At(
+                            value = "INVOKE",
+                            target =
+                                    "Lcom/hypixel/hytale/server/spawning/spawnmarkers/SpawnMarkerEntity;getNpcReferences()[Lcom/hypixel/hytale/server/core/entity/reference/InvalidatablePersistentRef;"))
     public InvalidatablePersistentRef[] patches$fixOnEntityRemoveRedirect(SpawnMarkerEntity instance) {
         InvalidatablePersistentRef[] refs = instance.getNpcReferences();
         if (refs == null) {
-            refixes$LOGGER.atWarning().log("MarkerAddRemoveSystem#onEntityRemove(): Fixed null NPC references (%s)", instance.getSpawnMarkerId());
+            refixes$LOGGER.atWarning().log(
+                    "MarkerAddRemoveSystem#onEntityRemove(): Fixed null NPC references (%s)",
+                    instance.getSpawnMarkerId());
             return new InvalidatablePersistentRef[0];
         }
         return refs;

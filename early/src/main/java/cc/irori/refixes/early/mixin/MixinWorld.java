@@ -7,14 +7,13 @@ import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import java.util.concurrent.CompletableFuture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(World.class)
 public class MixinWorld {
@@ -23,25 +22,32 @@ public class MixinWorld {
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
     @Redirect(
-            method = "addPlayer(Lcom/hypixel/hytale/server/core/universe/PlayerRef;Lcom/hypixel/hytale/math/vector/Transform;Ljava/lang/Boolean;Ljava/lang/Boolean;)Ljava/util/concurrent/CompletableFuture;",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/hypixel/hytale/server/core/universe/PlayerRef;getReference()Lcom/hypixel/hytale/component/Ref;"
-            )
-    )
+            method =
+                    "addPlayer(Lcom/hypixel/hytale/server/core/universe/PlayerRef;Lcom/hypixel/hytale/math/vector/Transform;Ljava/lang/Boolean;Ljava/lang/Boolean;)Ljava/util/concurrent/CompletableFuture;",
+            at =
+                    @At(
+                            value = "INVOKE",
+                            target =
+                                    "Lcom/hypixel/hytale/server/core/universe/PlayerRef;getReference()Lcom/hypixel/hytale/component/Ref;"))
     private Ref<EntityStore> refixes$skipBuiltInReferenceCheck(PlayerRef instance) {
         return null;
     }
 
     @Inject(
-            method = "addPlayer(Lcom/hypixel/hytale/server/core/universe/PlayerRef;Lcom/hypixel/hytale/math/vector/Transform;Ljava/lang/Boolean;Ljava/lang/Boolean;)Ljava/util/concurrent/CompletableFuture;",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/hypixel/hytale/server/core/universe/PlayerRef;getPacketHandler()Lcom/hypixel/hytale/server/core/io/PacketHandler;",
-                    shift = At.Shift.BEFORE
-            )
-    )
-    private void refixes$tryResolveRaceCondition(PlayerRef playerRef, Transform transform, Boolean clearWorldOverride, Boolean fadeInOutOverride, CallbackInfoReturnable<CompletableFuture<PlayerRef>> cir) {
+            method =
+                    "addPlayer(Lcom/hypixel/hytale/server/core/universe/PlayerRef;Lcom/hypixel/hytale/math/vector/Transform;Ljava/lang/Boolean;Ljava/lang/Boolean;)Ljava/util/concurrent/CompletableFuture;",
+            at =
+                    @At(
+                            value = "INVOKE",
+                            target =
+                                    "Lcom/hypixel/hytale/server/core/universe/PlayerRef;getPacketHandler()Lcom/hypixel/hytale/server/core/io/PacketHandler;",
+                            shift = At.Shift.BEFORE))
+    private void refixes$tryResolveRaceCondition(
+            PlayerRef playerRef,
+            Transform transform,
+            Boolean clearWorldOverride,
+            Boolean fadeInOutOverride,
+            CallbackInfoReturnable<CompletableFuture<PlayerRef>> cir) {
         if (playerRef.getReference() != null) {
             boolean resolved = false;
             for (int i = 0; i < 5; i++) {

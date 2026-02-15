@@ -23,11 +23,7 @@ public abstract class MixinUniverse {
     @Shadow
     protected abstract void lambda$removePlayer$2(PlayerRef par1, Void par2, Throwable par3);
 
-    @Inject(
-            method = "lambda$removePlayer$2",
-            at = @At("HEAD"),
-            cancellable = true
-    )
+    @Inject(method = "lambda$removePlayer$2", at = @At("HEAD"), cancellable = true)
     private void refixes$wrapRemovePlayerComplete(PlayerRef playerRef, Void result, Throwable error, CallbackInfo ci) {
         if (refixes$WRAPPING.get()) {
             // Run the original method
@@ -39,7 +35,8 @@ public abstract class MixinUniverse {
         try {
             lambda$removePlayer$2(playerRef, result, error);
         } catch (IllegalStateException e) {
-            refixes$LOGGER.atWarning().withCause(e).log("Universe#removePlayer(): Failed to finalize player removal (%s)", playerRef.getUsername());
+            refixes$LOGGER.atWarning().withCause(e).log(
+                    "Universe#removePlayer(): Failed to finalize player removal (%s)", playerRef.getUsername());
         } finally {
             refixes$WRAPPING.set(false);
         }

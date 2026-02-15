@@ -10,11 +10,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(WorldConfig.class)
 public class MixinWorldConfig {
 
-    @Inject(
-            method = "setSpawnProvider",
-            at = @At("HEAD")
-    )
+    @Inject(method = "setSpawnProvider", at = @At("HEAD"))
     private void refixes$markConfigDirtyOnSetSpawnProvider(ISpawnProvider spawnProvider, CallbackInfo ci) {
-        ((WorldConfig)(Object) this).markChanged();
+        ((WorldConfig) (Object) this).markChanged();
     }
 }

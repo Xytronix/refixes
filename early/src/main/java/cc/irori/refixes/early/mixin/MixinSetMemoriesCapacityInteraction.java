@@ -20,16 +20,14 @@ public class MixinSetMemoriesCapacityInteraction {
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
-    @Inject(
-            method = "firstRun",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void refixes$validatePlayerRefOnFirstRun(InteractionType type, InteractionContext context, CooldownHandler cooldownHandler, CallbackInfo ci) {
+    @Inject(method = "firstRun", at = @At("HEAD"), cancellable = true)
+    private void refixes$validatePlayerRefOnFirstRun(
+            InteractionType type, InteractionContext context, CooldownHandler cooldownHandler, CallbackInfo ci) {
         try {
             PlayerMemories.getComponentType().validate();
         } catch (IllegalStateException e) {
-            refixes$LOGGER.atWarning().withCause(e).log("SetMemoriesCapacityInteraction#firstRun(): PlayerMemories component is invalid");
+            refixes$LOGGER.atWarning().withCause(e).log(
+                    "SetMemoriesCapacityInteraction#firstRun(): PlayerMemories component is invalid");
             context.getState().state = InteractionState.Failed;
             ci.cancel();
         }

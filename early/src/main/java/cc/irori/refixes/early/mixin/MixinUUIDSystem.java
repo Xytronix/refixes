@@ -23,15 +23,21 @@ public class MixinUUIDSystem {
 
     @Inject(
             method = "onEntityRemove",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/hypixel/hytale/component/CommandBuffer;getComponent(Lcom/hypixel/hytale/component/Ref;Lcom/hypixel/hytale/component/ComponentType;)Lcom/hypixel/hytale/component/Component;",
-                    shift = At.Shift.BY,
-                    by = 3
-            ),
-            cancellable = true
-    )
-    private void refixes$validateUuidComponent(Ref<EntityStore> ref, RemoveReason reason, Store<EntityStore> store, CommandBuffer<EntityStore> commandBuffer, CallbackInfo ci, @Local(name = "uuidComponent") UUIDComponent uuidComponent) {
+            at =
+                    @At(
+                            value = "INVOKE",
+                            target =
+                                    "Lcom/hypixel/hytale/component/CommandBuffer;getComponent(Lcom/hypixel/hytale/component/Ref;Lcom/hypixel/hytale/component/ComponentType;)Lcom/hypixel/hytale/component/Component;",
+                            shift = At.Shift.BY,
+                            by = 3),
+            cancellable = true)
+    private void refixes$validateUuidComponent(
+            Ref<EntityStore> ref,
+            RemoveReason reason,
+            Store<EntityStore> store,
+            CommandBuffer<EntityStore> commandBuffer,
+            CallbackInfo ci,
+            @Local(name = "uuidComponent") UUIDComponent uuidComponent) {
         if (uuidComponent == null) {
             refixes$LOGGER.atWarning().log("UUIDSystem#onEntityRemove(): UUIDComponent is null");
             ci.cancel();
