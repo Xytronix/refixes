@@ -7,8 +7,7 @@ public final class Logs {
     private static final String LOGGER_NAME = "Refixes";
 
     // Private constructor to prevent instantiation
-    private Logs() {
-    }
+    private Logs() {}
 
     public static HytaleLogger logger() {
         return HytaleLogger.get(LOGGER_NAME);
