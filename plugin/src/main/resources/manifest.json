@@ -1,0 +1,16 @@
+{
+    "Group": "IroriPowered",
+    "Name": "Refixes",
+    "Version": "${version}",
+    "Website": "https://www.irori.cc/",
+    "Description": "TBD",
+    "Authors": [
+        {
+            "Name": "KabanFriends",
+            "Url": "https://github.com/KabanFriends"
+        }
+    ],
+    "ServerVersion": "*",
+    "Dependencies": {},
+    "OptionalDependencies": {}
+}
