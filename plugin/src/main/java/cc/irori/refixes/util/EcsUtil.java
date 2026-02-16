@@ -6,10 +6,10 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
-public final class ECSUtil {
+public final class EcsUtil {
 
     // Private constructor to prevent instantiation
-    private ECSUtil() {}
+    private EcsUtil() {}
 
     public static @Nullable UUID getPlayerUuid(Holder<EntityStore> holder) {
         UUIDComponent uuidComponent = holder.getComponent(UUIDComponent.getComponentType());

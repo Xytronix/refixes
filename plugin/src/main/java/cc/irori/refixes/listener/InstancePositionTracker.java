@@ -1,6 +1,6 @@
 package cc.irori.refixes.listener;
 
-import cc.irori.refixes.util.ECSUtil;
+import cc.irori.refixes.util.EcsUtil;
 import cc.irori.refixes.util.Logs;
 import cc.irori.refixes.util.WeakLocation;
 import com.google.common.cache.Cache;
@@ -32,7 +32,7 @@ public class InstancePositionTracker {
     private void onDrainPlayerFromWorld(DrainPlayerFromWorldEvent event) {
         World world = event.getWorld();
         String worldName = world.getName();
-        UUID playerUuid = ECSUtil.getPlayerUuid(event.getHolder());
+        UUID playerUuid = EcsUtil.getPlayerUuid(event.getHolder());
         if (playerUuid == null) return;
         PlayerRef playerRef = event.getHolder().getComponent(PlayerRef.getComponentType());
         if (playerRef == null) return;
