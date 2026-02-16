@@ -1,6 +1,6 @@
 {
     "Group": "IroriPowered",
-    "Name": "Refixes",
+    "Name": "Refixes-Bundle",
     "Version": "${version}",
     "Website": "https://www.irori.cc/",
     "Description": "Patches and optimizations for Hytale server.",
@@ -12,5 +12,15 @@
     ],
     "ServerVersion": ">=${hytaleVersion}",
     "Dependencies": {},
-    "OptionalDependencies": {}
+    "OptionalDependencies": {},
+    "SubPlugins": {
+        "IroriPowered:Refixes-Early": {
+            "Path": "earlyplugins/refixes-early-${version}.jar",
+            "Description": "Mixin-based patches for Hytale."
+        },
+        "IroriPowered:Refixes": {
+            "Path": "mods/refixes-plugin-${version}.jar",
+            "Description": "Runtime fixes and optimizations for Hytale."
+        }
+    }
 }
