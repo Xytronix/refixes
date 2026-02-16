@@ -38,6 +38,9 @@ public abstract class Configuration<C extends Configuration<?>> {
 
     @SuppressWarnings("unchecked")
     public final <T> T getValue(ConfigurationKey<C, T> key) {
+        if (!values.containsKey(key)) {
+            throw new IllegalArgumentException("Configuration does not contain key: " + key.name());
+        }
         return (T) values.get(key);
     }
 
