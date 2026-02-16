@@ -2,7 +2,7 @@ package cc.irori.refixes;
 
 import cc.irori.refixes.config.impl.RefixesConfig;
 import cc.irori.refixes.config.impl.SanitizerConfig;
-import cc.irori.refixes.sanitizer.DefaultWorldRecoverySanitizer;
+import cc.irori.refixes.sanitizer.DefaultWorldWatcher;
 import cc.irori.refixes.util.Logs;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
@@ -19,7 +19,7 @@ public class Refixes extends JavaPlugin {
     private final Config<RefixesConfig> config;
     private final List<String> fixSummary = new ArrayList<>();
 
-    private DefaultWorldRecoverySanitizer defaultWorldRecoverySanitizer;
+    private DefaultWorldWatcher defaultWorldWatcher;
 
     public Refixes(@NonNullDecl JavaPluginInit init) {
         super(init);
@@ -40,13 +40,10 @@ public class Refixes extends JavaPlugin {
     private void registerFixes() {
         fixSummary.clear();
 
-        applyFix(
-                "Default world recovery",
-                SanitizerConfig.get().getValue(SanitizerConfig.DEFAULT_WORLD_RECOVERY),
-                () -> {
-                    defaultWorldRecoverySanitizer = new DefaultWorldRecoverySanitizer();
-                    defaultWorldRecoverySanitizer.registerEvents(this);
-                });
+        applyFix("Default world watcher", SanitizerConfig.get().getValue(SanitizerConfig.DEFAULT_WORLD_WATCHER), () -> {
+            defaultWorldWatcher = new DefaultWorldWatcher();
+            defaultWorldWatcher.registerEvents(this);
+        });
 
         LOGGER.atInfo().log("=== Refixes runtime patches ===");
         for (String summary : fixSummary) {

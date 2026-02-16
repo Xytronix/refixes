@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DefaultWorldRecoverySanitizer {
+public class DefaultWorldWatcher {
 
     private static final HytaleLogger LOGGER = Logs.logger();
 
