@@ -5,6 +5,7 @@ import cc.irori.refixes.config.impl.SanitizerConfig;
 import cc.irori.refixes.sanitizer.DefaultWorldWatcher;
 import cc.irori.refixes.sanitizer.InstancePositionTracker;
 import cc.irori.refixes.system.CraftingManagerFixSystem;
+import cc.irori.refixes.system.InteractionManagerFixSystem;
 import cc.irori.refixes.system.ProcessingBenchFixSystem;
 import cc.irori.refixes.system.RespawnBlockFixSystem;
 import cc.irori.refixes.util.Early;
@@ -70,6 +71,10 @@ public class Refixes extends JavaPlugin {
                 SanitizerConfig.get().getValue(SanitizerConfig.CRAFTING_MANAGER)
                         && Early.isEnabledLogging("Crafting manager fix"),
                 () -> getEntityStoreRegistry().registerSystem(new CraftingManagerFixSystem()));
+        applyFix(
+                "Interaction manager fix",
+                SanitizerConfig.get().getValue(SanitizerConfig.INTERACTION_MANAGER),
+                () -> getEntityStoreRegistry().registerSystem(new InteractionManagerFixSystem()));
 
         LOGGER.atInfo().log("=== Refixes runtime patches ===");
         for (String summary : fixSummary) {

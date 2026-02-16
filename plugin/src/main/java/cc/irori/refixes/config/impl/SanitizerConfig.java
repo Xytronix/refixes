@@ -16,11 +16,19 @@ public class SanitizerConfig extends Configuration<SanitizerConfig> {
             new ConfigurationKey<>("InstancePositionTracker", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<SanitizerConfig, Boolean> CRAFTING_MANAGER =
             new ConfigurationKey<>("CraftingManager", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<SanitizerConfig, Boolean> INTERACTION_MANAGER =
+            new ConfigurationKey<>("InteractionManager", ConfigField.BOOLEAN, true);
 
     private static final SanitizerConfig INSTANCE = new SanitizerConfig();
 
     public SanitizerConfig() {
-        register(DEFAULT_WORLD_WATCHER, RESPAWN_BLOCK, PROCESSING_BENCH, INSTANCE_POSITION_TRACKER, CRAFTING_MANAGER);
+        register(
+                DEFAULT_WORLD_WATCHER,
+                RESPAWN_BLOCK,
+                PROCESSING_BENCH,
+                INSTANCE_POSITION_TRACKER,
+                CRAFTING_MANAGER,
+                INTERACTION_MANAGER);
     }
 
     public static SanitizerConfig get() {
