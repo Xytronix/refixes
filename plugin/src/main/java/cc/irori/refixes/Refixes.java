@@ -3,6 +3,7 @@ package cc.irori.refixes;
 import cc.irori.refixes.config.impl.RefixesConfig;
 import cc.irori.refixes.config.impl.SanitizerConfig;
 import cc.irori.refixes.sanitizer.DefaultWorldWatcher;
+import cc.irori.refixes.sanitizer.InstancePositionTracker;
 import cc.irori.refixes.system.ProcessingBenchFixSystem;
 import cc.irori.refixes.system.RespawnBlockFixSystem;
 import cc.irori.refixes.util.Logs;
@@ -22,6 +23,7 @@ public class Refixes extends JavaPlugin {
     private final List<String> fixSummary = new ArrayList<>();
 
     private DefaultWorldWatcher defaultWorldWatcher;
+    private InstancePositionTracker instancePositionTracker;
 
     public Refixes(@NonNullDecl JavaPluginInit init) {
         super(init);
@@ -54,6 +56,13 @@ public class Refixes extends JavaPlugin {
                 "Processing bench fix",
                 SanitizerConfig.get().getValue(SanitizerConfig.PROCESSING_BENCH),
                 () -> getChunkStoreRegistry().registerSystem(new ProcessingBenchFixSystem()));
+        applyFix(
+                "Instance position tracker",
+                SanitizerConfig.get().getValue(SanitizerConfig.INSTANCE_POSITION_TRACKER),
+                () -> {
+                    instancePositionTracker = new InstancePositionTracker();
+                    instancePositionTracker.registerEvents(this);
+                });
 
         LOGGER.atInfo().log("=== Refixes runtime patches ===");
         for (String summary : fixSummary) {
