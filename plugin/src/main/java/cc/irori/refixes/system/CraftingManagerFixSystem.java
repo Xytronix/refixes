@@ -32,18 +32,22 @@ public class CraftingManagerFixSystem extends EntityTickingSystem<EntityStore> {
             @NonNull ArchetypeChunk<EntityStore> archetypeChunk,
             @NonNull Store<EntityStore> store,
             @NonNull CommandBuffer<EntityStore> commandBuffer) {
-        CraftingManager craftingManager = archetypeChunk.getComponent(index, CraftingManager.getComponentType());
-        if (craftingManager == null) return;
-        MixinCraftingManagerAccessor accessor = (MixinCraftingManagerAccessor) craftingManager;
-        if (accessor.getBlockType() == null) return;
-        Player player = archetypeChunk.getComponent(index, Player.getComponentType());
-        if (player == null || !player.getWindowManager().getWindows().isEmpty()) return;
-        PlayerRef playerRef = archetypeChunk.getComponent(index, PlayerRef.getComponentType());
-        if (playerRef == null) return;
+        try {
+            CraftingManager craftingManager = archetypeChunk.getComponent(index, CraftingManager.getComponentType());
+            if (craftingManager == null) return;
+            MixinCraftingManagerAccessor accessor = (MixinCraftingManagerAccessor) craftingManager;
+            if (accessor.getBlockType() == null) return;
+            Player player = archetypeChunk.getComponent(index, Player.getComponentType());
+            if (player == null || !player.getWindowManager().getWindows().isEmpty()) return;
+            PlayerRef playerRef = archetypeChunk.getComponent(index, PlayerRef.getComponentType());
+            if (playerRef == null) return;
 
-        Ref<EntityStore> ref = archetypeChunk.getReferenceTo(index);
-        craftingManager.clearBench(ref, commandBuffer);
-        LOGGER.atWarning().log("Cleared stale crafting bench for player %s", playerRef.getUsername());
+            Ref<EntityStore> ref = archetypeChunk.getReferenceTo(index);
+            craftingManager.clearBench(ref, commandBuffer);
+            LOGGER.atWarning().log("Cleared stale crafting bench for player %s", playerRef.getUsername());
+        } catch (Exception e) {
+            LOGGER.atSevere().withCause(e).log("Failed to apply crafting manager fix");
+        }
     }
 
     @Override
