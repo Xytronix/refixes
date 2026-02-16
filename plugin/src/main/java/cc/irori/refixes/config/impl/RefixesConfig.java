@@ -9,11 +9,13 @@ public class RefixesConfig extends Configuration<RefixesConfig> {
             ConfigurationKey.subConfig("Listeners", ListenerConfig.get());
     private static final ConfigurationKey<RefixesConfig, SystemConfig> SYSTEM_CONFIG =
             ConfigurationKey.subConfig("Systems", SystemConfig.get());
+    private static final ConfigurationKey<RefixesConfig, ServiceConfig> SERVICE_CONFIG =
+            ConfigurationKey.subConfig("Services", ServiceConfig.get());
 
     private static final RefixesConfig INSTANCE = new RefixesConfig();
 
     public RefixesConfig() {
-        register(LISTENER_CONFIG, SYSTEM_CONFIG);
+        register(LISTENER_CONFIG, SYSTEM_CONFIG, SERVICE_CONFIG);
     }
 
     public static RefixesConfig get() {

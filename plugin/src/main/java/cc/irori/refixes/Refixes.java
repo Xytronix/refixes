@@ -1,10 +1,12 @@
 package cc.irori.refixes;
 
 import cc.irori.refixes.config.impl.ListenerConfig;
+import cc.irori.refixes.config.impl.PerPlayerHotRadiusConfig;
 import cc.irori.refixes.config.impl.RefixesConfig;
 import cc.irori.refixes.config.impl.SystemConfig;
 import cc.irori.refixes.listener.DefaultWorldWatcher;
 import cc.irori.refixes.listener.InstancePositionTracker;
+import cc.irori.refixes.service.PerPlayerHotRadiusService;
 import cc.irori.refixes.system.CraftingManagerFixSystem;
 import cc.irori.refixes.system.InteractionManagerFixSystem;
 import cc.irori.refixes.system.ProcessingBenchFixSystem;
@@ -29,6 +31,8 @@ public class Refixes extends JavaPlugin {
     private DefaultWorldWatcher defaultWorldWatcher;
     private InstancePositionTracker instancePositionTracker;
 
+    private PerPlayerHotRadiusService perPlayerHotRadiusService;
+
     public Refixes(@NonNullDecl JavaPluginInit init) {
         super(init);
         config = withConfig(RefixesConfig.get().getCodec());
@@ -43,11 +47,16 @@ public class Refixes extends JavaPlugin {
     }
 
     @Override
-    protected void start() {}
+    protected void start() {
+        if (perPlayerHotRadiusService != null) {
+            perPlayerHotRadiusService.registerService();
+        }
+    }
 
     private void registerFixes() {
         fixSummary.clear();
 
+        // Listeners
         applyFix("Default world watcher", ListenerConfig.get().getValue(ListenerConfig.DEFAULT_WORLD_WATCHER), () -> {
             defaultWorldWatcher = new DefaultWorldWatcher();
             defaultWorldWatcher.registerEvents(this);
@@ -59,6 +68,8 @@ public class Refixes extends JavaPlugin {
                     instancePositionTracker = new InstancePositionTracker();
                     instancePositionTracker.registerEvents(this);
                 });
+
+        // Systems
         applyFix(
                 "Respawn block fix",
                 SystemConfig.get().getValue(SystemConfig.RESPAWN_BLOCK),
@@ -76,6 +87,12 @@ public class Refixes extends JavaPlugin {
                 "Interaction manager fix",
                 SystemConfig.get().getValue(SystemConfig.INTERACTION_MANAGER),
                 () -> getEntityStoreRegistry().registerSystem(new InteractionManagerFixSystem()));
+
+        // Services
+        applyFix(
+                "Per-player hot radius",
+                PerPlayerHotRadiusConfig.get().getValue(PerPlayerHotRadiusConfig.ENABLED),
+                () -> perPlayerHotRadiusService = new PerPlayerHotRadiusService());
 
         LOGGER.atInfo().log("=== Refixes runtime patches ===");
         for (String summary : fixSummary) {
