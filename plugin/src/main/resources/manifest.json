@@ -3,7 +3,7 @@
     "Name": "Refixes",
     "Version": "${version}",
     "Website": "https://www.irori.cc/",
-    "Description": "TBD",
+    "Description": "Runtime fixes and optimizations for Hytale.",
     "Main": "cc.irori.refixes.Refixes",
     "Authors": [
         {
@@ -11,7 +11,7 @@
             "Url": "https://github.com/KabanFriends"
         }
     ],
-    "ServerVersion": "*",
+    "ServerVersion": ">=${hytaleVersion}",
     "Dependencies": {},
     "OptionalDependencies": {}
 }

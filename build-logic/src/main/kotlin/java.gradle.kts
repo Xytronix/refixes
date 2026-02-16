@@ -6,6 +6,8 @@ plugins {
     id("com.gradleup.shadow")
 }
 
+val libs: VersionCatalog = versionCatalogs.named("libs")
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(25))
@@ -21,14 +23,24 @@ spotless {
     }
 }
 
+repositories {
+    mavenCentral()
+    maven("https://maven.hytale.com/release")
+    maven("https://maven.hytale.com/pre-release")
+}
+
 tasks {
     processResources {
+        val hytaleVersion = libs.findVersion("hytale").get().toString()
+
         inputs.property("version", version)
+        inputs.property("hytaleVersion", hytaleVersion)
         filteringCharset = "UTF-8"
 
         filesMatching("manifest.json") {
             expand(
-                "version" to version
+                "version" to version,
+                "hytaleVersion" to hytaleVersion
             )
         }
     }
