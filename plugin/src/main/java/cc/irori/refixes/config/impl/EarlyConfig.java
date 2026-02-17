@@ -13,11 +13,17 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
 
     public static final ConfigurationKey<EarlyConfig, Boolean> DISABLE_FLUID_PRE_PROCESS =
             new ConfigurationKey<>("DisableFluidPreProcess", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<EarlyConfig, Boolean> PARALLEL_ENTITY_TICKING =
+            new ConfigurationKey<>("ParallelEntityTicking", ConfigField.BOOLEAN, true);
 
     private static final EarlyConfig INSTANCE = new EarlyConfig();
 
     public EarlyConfig() {
-        register(TICK_SLEEP_OPTIMIZATION_CONFIG, CYLINDER_VISIBILITY_CONFIG, DISABLE_FLUID_PRE_PROCESS);
+        register(
+                TICK_SLEEP_OPTIMIZATION_CONFIG,
+                CYLINDER_VISIBILITY_CONFIG,
+                DISABLE_FLUID_PRE_PROCESS,
+                PARALLEL_ENTITY_TICKING);
     }
 
     public static EarlyConfig get() {

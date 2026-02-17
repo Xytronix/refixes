@@ -1,14 +1,12 @@
 package cc.irori.refixes.early.mixin;
 
 import cc.irori.refixes.early.EarlyOptions;
-import cc.irori.refixes.early.util.Logs;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.spatial.SpatialResource;
 import com.hypixel.hytale.component.spatial.SpatialStructure;
-import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.server.core.modules.entity.EntityModule;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -18,7 +16,6 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import javax.annotation.Nonnull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
 
 /**
  * This patch uses collectCylinder() instead of collect(),
@@ -27,9 +24,6 @@ import org.spongepowered.asm.mixin.Unique;
  */
 @Mixin(EntityTrackerSystems.CollectVisible.class)
 public abstract class MixinCollectVisible {
-
-    @Unique
-    private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
     // Use cylindrical query instead of spherical for entity visibility collection
     @Overwrite

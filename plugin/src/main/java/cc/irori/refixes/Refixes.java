@@ -90,6 +90,7 @@ public class Refixes extends JavaPlugin {
 
         EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
                 () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
+        EarlyOptions.PARALLEL_ENTITY_TICKING.setSupplier(() -> config.getValue(EarlyConfig.PARALLEL_ENTITY_TICKING));
 
         EarlyOptions.CYLINDER_VISIBILITY_ENABLED.setSupplier(
                 () -> cylinderVisibilityConfig.getValue(CylinderVisibilityConfig.ENABLED));

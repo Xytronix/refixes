@@ -13,6 +13,9 @@ public final class EarlyOptions {
     public static final Value<Boolean> CYLINDER_VISIBILITY_ENABLED = new Value<>();
     public static final Value<Double> CYLINDER_VISIBILITY_HEIGHT_MULTIPLIER = new Value<>();
 
+    /* Parallel Entity Ticking */
+    public static final Value<Boolean> PARALLEL_ENTITY_TICKING = new Value<>();
+
     // Private constructor to prevent instantiation
     private EarlyOptions() {}
 
