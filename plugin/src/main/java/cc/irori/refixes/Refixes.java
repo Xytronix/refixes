@@ -87,6 +87,7 @@ public class Refixes extends JavaPlugin {
     private void registerEarlyOptions() {
         EarlyConfig config = EarlyConfig.get();
         CylinderVisibilityConfig cylinderVisibilityConfig = CylinderVisibilityConfig.get();
+        KDTreeOptimizationConfig kdTreeOptimizationConfig = KDTreeOptimizationConfig.get();
 
         EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
                 () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
@@ -96,6 +97,11 @@ public class Refixes extends JavaPlugin {
                 () -> cylinderVisibilityConfig.getValue(CylinderVisibilityConfig.ENABLED));
         EarlyOptions.CYLINDER_VISIBILITY_HEIGHT_MULTIPLIER.setSupplier(
                 () -> cylinderVisibilityConfig.getValue(CylinderVisibilityConfig.HEIGHT_MULTIPLIER));
+
+        EarlyOptions.KDTREE_OPTIMIZATION_ENABLED.setSupplier(
+                () -> kdTreeOptimizationConfig.getValue(KDTreeOptimizationConfig.ENABLED));
+        EarlyOptions.KDTREE_OPTIMIZATION_THRESHOLD.setSupplier(
+                () -> kdTreeOptimizationConfig.getValue(KDTreeOptimizationConfig.SPATIAL_FAST_SORT_THRESHOLD));
 
         EarlyOptions.setAvailable(true);
 
