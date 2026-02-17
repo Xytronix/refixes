@@ -2,6 +2,7 @@ package cc.irori.refixes;
 
 import cc.irori.refixes.config.impl.*;
 import cc.irori.refixes.early.EarlyOptions;
+import cc.irori.refixes.early.util.TickSleepOptimization;
 import cc.irori.refixes.listener.DefaultWorldWatcher;
 import cc.irori.refixes.listener.InstancePositionTracker;
 import cc.irori.refixes.service.PerPlayerHotRadiusService;
@@ -84,9 +85,18 @@ public class Refixes extends JavaPlugin {
     }
 
     private void registerEarlyOptions() {
-        EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(() -> EarlyConfig.get().getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
+        EarlyConfig config = EarlyConfig.get();
+
+        EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
+                () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
 
         EarlyOptions.setAvailable(true);
+
+        /* Tick Sleep Optimization */
+        TickSleepOptimizationConfig tsoConfig = TickSleepOptimizationConfig.get();
+        TickSleepOptimization.updateSleepOffset(
+                tsoConfig.getValue(TickSleepOptimizationConfig.ENABLED),
+                tsoConfig.getValue(TickSleepOptimizationConfig.SPIN_THRESHOLD_NANOS));
     }
 
     private void registerFixes() {

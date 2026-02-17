@@ -6,6 +6,7 @@ public interface ConfigField<T> {
 
     ConfigField<Boolean> BOOLEAN = new SimpleConfigField<>(Codec.BOOLEAN);
     ConfigField<Integer> INTEGER = new SimpleConfigField<>(Codec.INTEGER);
+    ConfigField<Long> LONG = new SimpleConfigField<>(Codec.LONG);
     ConfigField<Float> FLOAT = new SimpleConfigField<>(Codec.FLOAT);
     ConfigField<String> STRING = new SimpleConfigField<>(Codec.STRING);
     ConfigField<String[]> STRING_ARRAY = new SimpleConfigField<>(Codec.STRING_ARRAY);

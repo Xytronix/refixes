@@ -6,6 +6,7 @@ public final class EarlyOptions {
 
     private static boolean available = false;
 
+    /* Fluid Pre-processing */
     public static final Value<Boolean> DISABLE_FLUID_PRE_PROCESS = new Value<>();
 
     // Private constructor to prevent instantiation
