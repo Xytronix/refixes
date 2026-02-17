@@ -1,0 +1,41 @@
+package cc.irori.refixes.early;
+
+import java.util.function.Supplier;
+
+public final class EarlyOptions {
+
+    private static boolean available = false;
+
+    public static final Value<Boolean> DISABLE_FLUID_PRE_PROCESS = new Value<>();
+
+    // Private constructor to prevent instantiation
+    private EarlyOptions() {
+    }
+
+    public static void setAvailable(boolean available) {
+        EarlyOptions.available = available;
+    }
+
+    public static boolean isAvailable() {
+        return available;
+    }
+
+    public static final class Value<T> {
+
+        private Supplier<T> supplier = null;
+
+        private Value() {
+        }
+
+        public void setSupplier(Supplier<T> supplier) {
+            this.supplier = supplier;
+        }
+
+        public T get() {
+            if (supplier == null) {
+                throw new IllegalStateException("Value supplier has not been set");
+            }
+            return supplier.get();
+        }
+    }
+}

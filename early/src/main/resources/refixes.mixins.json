@@ -11,6 +11,7 @@
         "MixinCraftingManagerAccessor",
         "MixinFluidPlugin",
         "MixinGamePacketHandler",
+        "MixinHytaleServer",
         "MixinInteractionChain",
         "MixinInteractionManager",
         "MixinMarkerAddRemoveSystem",

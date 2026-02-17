@@ -1,6 +1,7 @@
 package cc.irori.refixes;
 
 import cc.irori.refixes.config.impl.*;
+import cc.irori.refixes.early.EarlyOptions;
 import cc.irori.refixes.listener.DefaultWorldWatcher;
 import cc.irori.refixes.listener.InstancePositionTracker;
 import cc.irori.refixes.service.PerPlayerHotRadiusService;
@@ -44,6 +45,14 @@ public class Refixes extends JavaPlugin {
         config.load().join();
         config.save().join();
 
+        if (Early.isEnabled()) {
+            try {
+                registerEarlyOptions();
+            } catch (Exception e) {
+                LOGGER.atSevere().withCause(e).log("Failed to pass config values to Refixes-Early, ensure that you have the same version of Refixes and Refixes-Early installed.");
+            }
+        }
+
         registerFixes();
     }
 
@@ -71,6 +80,12 @@ public class Refixes extends JavaPlugin {
         if (viewRadiusAdjuster != null) {
             viewRadiusAdjuster.unregisterService();
         }
+    }
+
+    private void registerEarlyOptions() {
+        EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(() -> EarlyConfig.get().getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
+
+        EarlyOptions.setAvailable(true);
     }
 
     private void registerFixes() {
