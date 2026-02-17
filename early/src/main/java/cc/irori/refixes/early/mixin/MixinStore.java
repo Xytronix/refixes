@@ -27,8 +27,7 @@ public abstract class MixinStore<ECS_TYPE> {
             return;
         }
         if (!currentThread.equals(this.thread) && this.thread.isAlive()) {
-            throw new IllegalStateException(
-                    "Assert not in thread! " + this.thread + " but was in " + currentThread);
+            throw new IllegalStateException("Assert not in thread! " + this.thread + " but was in " + currentThread);
         }
     }
 }

@@ -9,8 +9,7 @@ public final class EarlyOptions {
     public static final Value<Boolean> DISABLE_FLUID_PRE_PROCESS = new Value<>();
 
     // Private constructor to prevent instantiation
-    private EarlyOptions() {
-    }
+    private EarlyOptions() {}
 
     public static void setAvailable(boolean available) {
         EarlyOptions.available = available;
@@ -24,8 +23,7 @@ public final class EarlyOptions {
 
         private Supplier<T> supplier = null;
 
-        private Value() {
-        }
+        private Value() {}
 
         public void setSupplier(Supplier<T> supplier) {
             this.supplier = supplier;

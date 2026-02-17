@@ -19,16 +19,13 @@ public class MixinHytaleServer {
 
     @Inject(
             method = "<init>",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lio/netty/handler/codec/quic/Quic;ensureAvailability()V"
-            )
-    )
+            at = @At(value = "INVOKE", target = "Lio/netty/handler/codec/quic/Quic;ensureAvailability()V"))
     private void refixes$setupBootEvent(CallbackInfo ci) {
         HytaleServer server = (HytaleServer) (Object) this;
         server.getEventBus().register(BootEvent.class, event -> {
             if (!EarlyOptions.isAvailable()) {
-                refixes$LOGGER.atWarning().log("Refixes Main Plugin is not installed! Some Mixin patches will not be applied.");
+                refixes$LOGGER.atWarning().log(
+                        "Refixes Main Plugin is not installed! Some Mixin patches will not be applied.");
             }
         });
     }

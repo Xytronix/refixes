@@ -49,7 +49,8 @@ public class Refixes extends JavaPlugin {
             try {
                 registerEarlyOptions();
             } catch (Exception e) {
-                LOGGER.atSevere().withCause(e).log("Failed to pass config values to Refixes-Early, ensure that you have the same version of Refixes and Refixes-Early installed.");
+                LOGGER.atSevere().withCause(e).log(
+                        "Failed to pass config values to Refixes-Early, ensure that you have the same version of Refixes and Refixes-Early installed.");
             }
         }
 
