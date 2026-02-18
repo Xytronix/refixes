@@ -16,7 +16,7 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
     public static final ConfigurationKey<EarlyConfig, Boolean> DISABLE_FLUID_PRE_PROCESS =
             new ConfigurationKey<>("DisableFluidPreProcess", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<EarlyConfig, Boolean> PARALLEL_ENTITY_TICKING =
-            new ConfigurationKey<>("ParallelEntityTicking", ConfigField.BOOLEAN, true);
+            new ConfigurationKey<>("ParallelEntityTicking", ConfigField.BOOLEAN, false);
 
     private static final EarlyConfig INSTANCE = new EarlyConfig();
 
