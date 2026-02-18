@@ -14,11 +14,13 @@ public class SystemConfig extends Configuration<SystemConfig> {
             new ConfigurationKey<>("CraftingManager", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<SystemConfig, Boolean> INTERACTION_MANAGER =
             new ConfigurationKey<>("InteractionManager", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<SystemConfig, Boolean> ENTITY_DESPAWN_TIMER =
+            new ConfigurationKey<>("EntityDespawnTimer", ConfigField.BOOLEAN, true);
 
     private static final SystemConfig INSTANCE = new SystemConfig();
 
     public SystemConfig() {
-        register(RESPAWN_BLOCK, PROCESSING_BENCH, CRAFTING_MANAGER, INTERACTION_MANAGER);
+        register(RESPAWN_BLOCK, PROCESSING_BENCH, CRAFTING_MANAGER, INTERACTION_MANAGER, ENTITY_DESPAWN_TIMER);
     }
 
     public static SystemConfig get() {

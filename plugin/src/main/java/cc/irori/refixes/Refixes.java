@@ -6,9 +6,7 @@ import cc.irori.refixes.early.util.TickSleepOptimization;
 import cc.irori.refixes.listener.DefaultWorldWatcher;
 import cc.irori.refixes.listener.InstancePositionTracker;
 import cc.irori.refixes.listener.SharedInstanceBootUnloader;
-import cc.irori.refixes.service.PerPlayerHotRadiusService;
-import cc.irori.refixes.service.TpsAdjuster;
-import cc.irori.refixes.service.ViewRadiusAdjuster;
+import cc.irori.refixes.service.*;
 import cc.irori.refixes.system.*;
 import cc.irori.refixes.util.Early;
 import cc.irori.refixes.util.Logs;
@@ -31,9 +29,12 @@ public class Refixes extends JavaPlugin {
     private InstancePositionTracker instancePositionTracker;
     private SharedInstanceBootUnloader sharedInstanceBootUnloader;
 
+    private ActiveChunkUnloader activeChunkUnloader;
     private PerPlayerHotRadiusService perPlayerHotRadiusService;
     private TpsAdjuster tpsAdjuster;
     private ViewRadiusAdjuster viewRadiusAdjuster;
+    private IdlePlayerService idlePlayerService;
+    private AiTickThrottlerService aiTickThrottler;
 
     public Refixes(@NonNullDecl JavaPluginInit init) {
         super(init);
@@ -59,6 +60,9 @@ public class Refixes extends JavaPlugin {
 
     @Override
     protected void start() {
+        if (activeChunkUnloader != null) {
+            activeChunkUnloader.registerService();
+        }
         if (perPlayerHotRadiusService != null) {
             perPlayerHotRadiusService.registerService();
         }
@@ -68,10 +72,19 @@ public class Refixes extends JavaPlugin {
         if (viewRadiusAdjuster != null) {
             viewRadiusAdjuster.registerService();
         }
+        if (idlePlayerService != null) {
+            idlePlayerService.registerService();
+        }
+        if (aiTickThrottler != null) {
+            aiTickThrottler.registerService();
+        }
     }
 
     @Override
     protected void shutdown() {
+        if (activeChunkUnloader != null) {
+            activeChunkUnloader.unregisterService();
+        }
         if (perPlayerHotRadiusService != null) {
             perPlayerHotRadiusService.unregisterService();
         }
@@ -80,6 +93,12 @@ public class Refixes extends JavaPlugin {
         }
         if (viewRadiusAdjuster != null) {
             viewRadiusAdjuster.unregisterService();
+        }
+        if (idlePlayerService != null) {
+            idlePlayerService.unregisterService();
+        }
+        if (aiTickThrottler != null) {
+            aiTickThrottler.unregisterService();
         }
     }
 
@@ -92,6 +111,7 @@ public class Refixes extends JavaPlugin {
 
         EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
                 () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
+        EarlyOptions.ASYNC_BLOCK_PRE_PROCESS.setSupplier(() -> config.getValue(EarlyConfig.ASYNC_BLOCK_PRE_PROCESS));
         EarlyOptions.PARALLEL_ENTITY_TICKING.setSupplier(
                 () -> experimentalConfig.getValue(ExperimentalConfig.PARALLEL_ENTITY_TICKING));
 
@@ -109,6 +129,9 @@ public class Refixes extends JavaPlugin {
                 () -> sharedInstanceConfig.getValue(SharedInstanceConfig.ENABLED));
         EarlyOptions.SHARED_INSTANCES_EXCLUDED_PREFIXES.setSupplier(
                 () -> sharedInstanceConfig.getValue(SharedInstanceConfig.EXCLUDED_PREFIXES));
+
+        EarlyOptions.MAX_CHUNKS_PER_SECOND.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_SECOND));
+        EarlyOptions.MAX_CHUNKS_PER_TICK.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_TICK));
 
         EarlyOptions.setAvailable(true);
 
@@ -153,8 +176,16 @@ public class Refixes extends JavaPlugin {
                 "Interaction manager fix",
                 SystemConfig.get().getValue(SystemConfig.INTERACTION_MANAGER),
                 () -> getEntityStoreRegistry().registerSystem(new InteractionManagerFixSystem()));
+        applyFix(
+                "Entity despawn timer",
+                SystemConfig.get().getValue(SystemConfig.ENTITY_DESPAWN_TIMER),
+                () -> getEntityStoreRegistry().registerSystem(new EntityDespawnTimerSystem()));
 
         // Services
+        applyFix(
+                "Active chunk unloader",
+                ChunkUnloaderConfig.get().getValue(ChunkUnloaderConfig.ENABLED),
+                () -> activeChunkUnloader = new ActiveChunkUnloader());
         applyFix(
                 "Per-player hot radius",
                 PerPlayerHotRadiusConfig.get().getValue(PerPlayerHotRadiusConfig.ENABLED),
@@ -167,6 +198,16 @@ public class Refixes extends JavaPlugin {
                 "View radius adjuster",
                 ViewRadiusAdjusterConfig.get().getValue(ViewRadiusAdjusterConfig.ENABLED),
                 () -> viewRadiusAdjuster = new ViewRadiusAdjuster());
+        applyFix(
+                "Idle player handler",
+                IdlePlayerHandlerConfig.get().getValue(IdlePlayerHandlerConfig.ENABLED),
+                () -> idlePlayerService = new IdlePlayerService());
+        // Ai tick throttler will run once to sweep frozen entities and allow safe deinstall
+        aiTickThrottler = new AiTickThrottlerService();
+        fixSummary.add(
+                AiTickThrottlerConfig.get().getValue(AiTickThrottlerConfig.ENABLED)
+                        ? "  - [x] AI tick throttler"
+                        : "  - [ ] AI tick throttler");
 
         applyFix(
                 "Shared instance worlds",
