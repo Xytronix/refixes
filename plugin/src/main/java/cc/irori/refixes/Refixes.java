@@ -30,8 +30,6 @@ public class Refixes extends JavaPlugin {
     private SharedInstanceBootUnloader sharedInstanceBootUnloader;
 
     private PerPlayerHotRadiusService perPlayerHotRadiusService;
-    private TpsAdjuster tpsAdjuster;
-    private ViewRadiusAdjuster viewRadiusAdjuster;
 
     public Refixes(@NonNullDecl JavaPluginInit init) {
         super(init);

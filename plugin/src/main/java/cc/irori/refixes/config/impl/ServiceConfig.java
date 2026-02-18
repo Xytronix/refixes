@@ -7,15 +7,11 @@ public class ServiceConfig extends Configuration<ServiceConfig> {
 
     private static final ConfigurationKey<ServiceConfig, PerPlayerHotRadiusConfig> PER_PLAYER_RADIUS_CONFIG =
             ConfigurationKey.subConfig("PerPlayerHotRadius", PerPlayerHotRadiusConfig.get());
-    private static final ConfigurationKey<ServiceConfig, TpsAdjusterConfig> TPS_ADJUSTER_CONFIG =
-            ConfigurationKey.subConfig("TpsAdjuster", TpsAdjusterConfig.get());
-    private static final ConfigurationKey<ServiceConfig, ViewRadiusAdjusterConfig> VIEW_RADIUS_ADJUSTER_CONFIG =
-            ConfigurationKey.subConfig("ViewRadiusAdjuster", ViewRadiusAdjusterConfig.get());
 
     private static final ServiceConfig INSTANCE = new ServiceConfig();
 
     public ServiceConfig() {
-        register(PER_PLAYER_RADIUS_CONFIG, TPS_ADJUSTER_CONFIG, VIEW_RADIUS_ADJUSTER_CONFIG);
+        register(PER_PLAYER_RADIUS_CONFIG);
     }
 
     public static ServiceConfig get() {
