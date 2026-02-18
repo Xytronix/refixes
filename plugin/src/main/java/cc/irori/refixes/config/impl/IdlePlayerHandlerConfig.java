@@ -24,6 +24,8 @@ public class IdlePlayerHandlerConfig extends Configuration<IdlePlayerHandlerConf
             new ConfigurationKey<>("ReduceMinLoadedRadius", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<IdlePlayerHandlerConfig, Integer> IDLE_MIN_LOADED_RADIUS =
             new ConfigurationKey<>("IdleMinLoadedRadius", ConfigField.INTEGER, 2);
+    public static final ConfigurationKey<IdlePlayerHandlerConfig, Double> MOVEMENT_THRESHOLD =
+            new ConfigurationKey<>("MovementThreshold", ConfigField.DOUBLE, 0.5);
 
     private static final IdlePlayerHandlerConfig INSTANCE = new IdlePlayerHandlerConfig();
 
@@ -37,7 +39,8 @@ public class IdlePlayerHandlerConfig extends Configuration<IdlePlayerHandlerConf
                 REDUCE_HOT_RADIUS,
                 IDLE_HOT_RADIUS,
                 REDUCE_MIN_LOADED_RADIUS,
-                IDLE_MIN_LOADED_RADIUS);
+                IDLE_MIN_LOADED_RADIUS,
+                MOVEMENT_THRESHOLD);
     }
 
     public static IdlePlayerHandlerConfig get() {

@@ -1,7 +1,11 @@
 package cc.irori.refixes.service;
 
-import cc.irori.refixes.config.impl.IdlePlayerHandlerConfig;
-import cc.irori.refixes.util.Logs;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -13,11 +17,9 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+
+import cc.irori.refixes.config.impl.IdlePlayerHandlerConfig;
+import cc.irori.refixes.util.Logs;
 
 /**
  * Detects AFK players and reduces their view/hot/minLoaded
@@ -73,7 +75,11 @@ public class IdlePlayerService {
             Vector3d currentPos = playerRef.getTransform().getPosition();
 
             // Detect movement
-            if (state.lastPosition != null && hasPlayerMoved(state.lastPosition, currentPos)) {
+            if (state.lastPosition != null
+                    && hasPlayerMoved(
+                            state.lastPosition,
+                            currentPos,
+                            cfg.getValue(IdlePlayerHandlerConfig.MOVEMENT_THRESHOLD))) {
                 state.markActivity();
                 if (state.wasIdle) {
                     restorePlayerSettings(playerRef, state, cfg);
@@ -222,11 +228,11 @@ public class IdlePlayerService {
         }
     }
 
-    private static boolean hasPlayerMoved(Vector3d prev, Vector3d curr) {
+    private static boolean hasPlayerMoved(Vector3d prev, Vector3d curr, double threshold) {
         double dx = prev.getX() - curr.getX();
         double dz = prev.getZ() - curr.getZ();
         // Only check XZ movement; ignore Y to avoid false positives from falling
-        return dx * dx + dz * dz > 0.25;
+        return dx * dx + dz * dz > threshold * threshold;
     }
 
     private static final class PlayerIdleState {
