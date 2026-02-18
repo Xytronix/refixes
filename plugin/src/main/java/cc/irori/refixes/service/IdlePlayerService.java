@@ -79,7 +79,7 @@ public class IdlePlayerService {
                     restorePlayerSettings(playerRef, state, cfg);
                 }
             }
-            state.lastPosition = currentPos;
+            state.lastPosition = new Vector3d(currentPos);
 
             if (!state.wasIdle && now - state.lastActivityMs > timeoutMs) {
                 applyIdleSettings(playerRef, state, cfg);
