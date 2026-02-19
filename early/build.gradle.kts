@@ -8,7 +8,8 @@ repositories {
 
 dependencies {
     compileOnly(libs.hytale)
-    compileOnly(libs.hyxin)
+    compileOnly(libs.mixin)
+    compileOnly(libs.mixinextras)
 }
 
 base {
