@@ -142,6 +142,10 @@ public class WatchdogService {
             return;
         }
 
+        if (HytaleServer.get().isShuttingDown()) {
+            return;
+        }
+
         List<String> worldNames = new ArrayList<>();
         String[] configWorldNames = config.getValue(WatchdogConfig.AUTO_RESTARTING_WORLD_FILTER);
         for (String worldName : configWorldNames) {
