@@ -113,6 +113,13 @@ public class Refixes extends JavaPlugin {
         SharedInstanceConfig sharedInstanceConfig = SharedInstanceConfig.get();
         ExperimentalConfig experimentalConfig = ExperimentalConfig.get();
 
+        if (config.getValue(EarlyConfig.FORCE_SKIP_MOD_VALIDATION)) {
+            LOGGER.atSevere().log(
+                    "Force Skip Mod Validation is enabled! ALWAYS remember to check your mods are working correctly after server updates.");
+        }
+
+        EarlyOptions.FORCE_SKIP_MOD_VALIDATION.setSupplier(
+                () -> config.getValue(EarlyConfig.FORCE_SKIP_MOD_VALIDATION));
         EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
                 () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
         EarlyOptions.PARALLEL_ENTITY_TICKING.setSupplier(

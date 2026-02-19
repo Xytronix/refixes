@@ -6,6 +6,9 @@ public final class EarlyOptions {
 
     private static boolean available = false;
 
+    /* Force Skip Mod Validation */
+    public static final Value<Boolean> FORCE_SKIP_MOD_VALIDATION = new Value<>();
+
     /* Fluid Pre-processing */
     public static final Value<Boolean> DISABLE_FLUID_PRE_PROCESS = new Value<>();
 

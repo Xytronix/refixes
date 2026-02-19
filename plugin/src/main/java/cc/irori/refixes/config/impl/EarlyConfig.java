@@ -17,6 +17,8 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
 
     public static final ConfigurationKey<EarlyConfig, Boolean> DISABLE_FLUID_PRE_PROCESS =
             new ConfigurationKey<>("DisableFluidPreProcess", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<EarlyConfig, Boolean> FORCE_SKIP_MOD_VALIDATION =
+            new ConfigurationKey<>("ForceSkipModValidation", ConfigField.BOOLEAN, false);
 
     private static final EarlyConfig INSTANCE = new EarlyConfig();
 
@@ -26,7 +28,8 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
                 CYLINDER_VISIBILITY_CONFIG,
                 KDTREE_OPTIMIZATION_CONFIG,
                 ASYNC_BLOCK_PRE_PROCESS_CONFIG,
-                DISABLE_FLUID_PRE_PROCESS);
+                DISABLE_FLUID_PRE_PROCESS,
+                FORCE_SKIP_MOD_VALIDATION);
     }
 
     public static EarlyConfig get() {
