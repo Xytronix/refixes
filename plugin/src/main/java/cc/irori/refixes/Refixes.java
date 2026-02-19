@@ -1,19 +1,6 @@
 package cc.irori.refixes;
 
-import cc.irori.refixes.config.impl.AiTickThrottlerConfig;
-import cc.irori.refixes.config.impl.ChunkUnloaderConfig;
-import cc.irori.refixes.config.impl.CylinderVisibilityConfig;
-import cc.irori.refixes.config.impl.EarlyConfig;
-import cc.irori.refixes.config.impl.ExperimentalConfig;
-import cc.irori.refixes.config.impl.IdlePlayerHandlerConfig;
-import cc.irori.refixes.config.impl.KDTreeOptimizationConfig;
-import cc.irori.refixes.config.impl.ListenerConfig;
-import cc.irori.refixes.config.impl.PerPlayerHotRadiusConfig;
-import cc.irori.refixes.config.impl.RefixesConfig;
-import cc.irori.refixes.config.impl.SharedInstanceConfig;
-import cc.irori.refixes.config.impl.SystemConfig;
-import cc.irori.refixes.config.impl.TickSleepOptimizationConfig;
-import cc.irori.refixes.config.impl.WatchdogConfig;
+import cc.irori.refixes.config.impl.*;
 import cc.irori.refixes.early.EarlyOptions;
 import cc.irori.refixes.early.util.TickSleepOptimization;
 import cc.irori.refixes.listener.InstancePositionTracker;
@@ -122,12 +109,12 @@ public class Refixes extends JavaPlugin {
         EarlyConfig config = EarlyConfig.get();
         CylinderVisibilityConfig cylinderVisibilityConfig = CylinderVisibilityConfig.get();
         KDTreeOptimizationConfig kdTreeOptimizationConfig = KDTreeOptimizationConfig.get();
+        AsyncBlockPreProcessConfig asyncBlockPreProcessConfig = AsyncBlockPreProcessConfig.get();
         SharedInstanceConfig sharedInstanceConfig = SharedInstanceConfig.get();
         ExperimentalConfig experimentalConfig = ExperimentalConfig.get();
 
         EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
                 () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
-        EarlyOptions.ASYNC_BLOCK_PRE_PROCESS.setSupplier(() -> config.getValue(EarlyConfig.ASYNC_BLOCK_PRE_PROCESS));
         EarlyOptions.PARALLEL_ENTITY_TICKING.setSupplier(
                 () -> experimentalConfig.getValue(ExperimentalConfig.PARALLEL_ENTITY_TICKING));
 
@@ -146,8 +133,12 @@ public class Refixes extends JavaPlugin {
         EarlyOptions.SHARED_INSTANCES_EXCLUDED_PREFIXES.setSupplier(
                 () -> sharedInstanceConfig.getValue(SharedInstanceConfig.EXCLUDED_PREFIXES));
 
-        EarlyOptions.MAX_CHUNKS_PER_SECOND.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_SECOND));
-        EarlyOptions.MAX_CHUNKS_PER_TICK.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_TICK));
+        EarlyOptions.ASYNC_BLOCK_PRE_PROCESS.setSupplier(
+                () -> asyncBlockPreProcessConfig.getValue(AsyncBlockPreProcessConfig.ASYNC_BLOCK_PRE_PROCESS));
+        EarlyOptions.MAX_CHUNKS_PER_SECOND.setSupplier(
+                () -> asyncBlockPreProcessConfig.getValue(AsyncBlockPreProcessConfig.MAX_CHUNKS_PER_SECOND));
+        EarlyOptions.MAX_CHUNKS_PER_TICK.setSupplier(
+                () -> asyncBlockPreProcessConfig.getValue(AsyncBlockPreProcessConfig.MAX_CHUNKS_PER_TICK));
 
         EarlyOptions.setAvailable(true);
 
