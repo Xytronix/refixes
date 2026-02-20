@@ -12,13 +12,17 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
             ConfigurationKey.subConfig("CylinderVisibility", CylinderVisibilityConfig.get());
     private static final ConfigurationKey<EarlyConfig, KDTreeOptimizationConfig> KDTREE_OPTIMIZATION_CONFIG =
             ConfigurationKey.subConfig("KDTreeOptimization", KDTreeOptimizationConfig.get());
-    private static final ConfigurationKey<EarlyConfig, AsyncBlockPreProcessConfig> ASYNC_BLOCK_PRE_PROCESS_CONFIG =
-            ConfigurationKey.subConfig("AsyncBlockPreProcess", AsyncBlockPreProcessConfig.get());
 
-    public static final ConfigurationKey<EarlyConfig, Boolean> DISABLE_FLUID_PRE_PROCESS =
-            new ConfigurationKey<>("DisableFluidPreProcess", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<EarlyConfig, Boolean> FORCE_SKIP_MOD_VALIDATION =
             new ConfigurationKey<>("ForceSkipModValidation", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<EarlyConfig, Boolean> DISABLE_FLUID_PRE_PROCESS =
+            new ConfigurationKey<>("DisableFluidPreProcess", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<EarlyConfig, Boolean> ASYNC_BLOCK_PRE_PROCESS =
+            new ConfigurationKey<>("AsyncBlockPreProcess", ConfigField.BOOLEAN, true);
+    public static final ConfigurationKey<EarlyConfig, Integer> MAX_CHUNKS_PER_SECOND =
+            new ConfigurationKey<>("MaxChunksPerSecond", ConfigField.INTEGER, 36);
+    public static final ConfigurationKey<EarlyConfig, Integer> MAX_CHUNKS_PER_TICK =
+            new ConfigurationKey<>("MaxChunksPerTick", ConfigField.INTEGER, 4);
 
     private static final EarlyConfig INSTANCE = new EarlyConfig();
 
@@ -27,9 +31,11 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
                 TICK_SLEEP_OPTIMIZATION_CONFIG,
                 CYLINDER_VISIBILITY_CONFIG,
                 KDTREE_OPTIMIZATION_CONFIG,
-                ASYNC_BLOCK_PRE_PROCESS_CONFIG,
+                FORCE_SKIP_MOD_VALIDATION,
                 DISABLE_FLUID_PRE_PROCESS,
-                FORCE_SKIP_MOD_VALIDATION);
+                ASYNC_BLOCK_PRE_PROCESS,
+                MAX_CHUNKS_PER_SECOND,
+                MAX_CHUNKS_PER_TICK);
     }
 
     public static EarlyConfig get() {
