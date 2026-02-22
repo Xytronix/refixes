@@ -4,14 +4,14 @@
 
 <!-- Sections below may be deleted if they are not relevant to your pull request. -->
 
-# Summary
+## Summary
 <!-- Briefly describe what this PR does and why. Keep it to 1–3 short paragraphs. -->
 
-# Related issues
+## Related issues
 <!-- Link related issue(s), e.g. `Fixes #123`, `Relates to #456` -->
 - 
 
-# Type of change
+## Type of change
 <!-- Select one or more that apply -->
 - [ ] Bug fix (non-breaking)
 - [ ] New feature (non-breaking)
@@ -19,10 +19,10 @@
 - [ ] Chore / refactor
 - [ ] Documentation only
 
-# Implementation details
+## Implementation details
 <!-- Short summary of how the change is implemented. Mention key files/classes affected. -->
 
-# Checklist
+## Checklist
 - [ ] Code compiles successfully
 - [ ] Pull request does not contain unrelated changes
 - [ ] Changes follow this project's code style (Use `spotlessApply` when necessary)
