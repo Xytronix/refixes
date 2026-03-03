@@ -50,7 +50,9 @@ public class AiTickThrottlerCleanupSystem extends RefSystem<EntityStore> {
         if (cfg.getValue(AiTickThrottlerConfig.LEGACY_CLEANUP)) {
             boolean hasOrphan = commandBuffer.getComponent(ref, Frozen.getComponentType()) != null
                     || commandBuffer.getComponent(ref, StepComponent.getComponentType()) != null;
-            if (hasOrphan && !isNpcTypeExcluded(ref, commandBuffer, cfg, AiTickThrottlerConfig.LEGACY_CLEANUP_EXCLUDED_NPC_TYPES)) {
+            if (hasOrphan
+                    && !isNpcTypeExcluded(
+                            ref, commandBuffer, cfg, AiTickThrottlerConfig.LEGACY_CLEANUP_EXCLUDED_NPC_TYPES)) {
                 commandBuffer.tryRemoveComponent(ref, Frozen.getComponentType());
                 commandBuffer.tryRemoveComponent(ref, StepComponent.getComponentType());
             }
@@ -58,8 +60,10 @@ public class AiTickThrottlerCleanupSystem extends RefSystem<EntityStore> {
     }
 
     private static boolean isNpcTypeExcluded(
-            Ref<EntityStore> ref, CommandBuffer<EntityStore> commandBuffer,
-            AiTickThrottlerConfig cfg, ConfigurationKey<AiTickThrottlerConfig, String[]> excludedTypesKey) {
+            Ref<EntityStore> ref,
+            CommandBuffer<EntityStore> commandBuffer,
+            AiTickThrottlerConfig cfg,
+            ConfigurationKey<AiTickThrottlerConfig, String[]> excludedTypesKey) {
         Set<String> excluded = new HashSet<>(Arrays.asList(cfg.getValue(excludedTypesKey)));
         if (excluded.isEmpty()) {
             return false;

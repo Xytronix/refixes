@@ -23,6 +23,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.npc.components.SpawnBeaconReference;
+import com.hypixel.hytale.server.npc.components.SpawnMarkerReference;
 import com.hypixel.hytale.server.npc.components.StepComponent;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import java.util.ArrayList;
@@ -62,6 +64,8 @@ public class AiTickThrottlerService {
     private ComponentType<EntityStore, NPCEntity> npcEntityType;
     private ComponentType<EntityStore, NPCMountComponent> mountType;
     private ComponentType<EntityStore, MovementStatesComponent> movementStatesType;
+    private ComponentType<EntityStore, SpawnMarkerReference> spawnMarkerRefType;
+    private ComponentType<EntityStore, SpawnBeaconReference> spawnBeaconRefType;
     private Query<EntityStore> npcQuery;
 
     private final Map<String, WorldState> worldStates = new ConcurrentHashMap<>();
@@ -148,10 +152,18 @@ public class AiTickThrottlerService {
         // No players online: freeze all NPCs once, then skip subsequent cycles
         if (playerChunks.isEmpty()) {
             if (!state.frozenWithoutPlayers) {
-                Set<String> excludedNpcTypes = new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
+                Set<String> excludedNpcTypes =
+                        new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
                 boolean excludeMountsOnEmpty = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_MOUNTS);
                 boolean excludeFlyingOnEmpty = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_FLYING);
-                freezeAllNpcs(store, excludedNpcTypes, excludeMountsOnEmpty, excludeFlyingOnEmpty);
+                boolean excludeSpawnMarkerNpcsOnEmpty =
+                        cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_SPAWN_MARKER_NPCS);
+                freezeAllNpcs(
+                        store,
+                        excludedNpcTypes,
+                        excludeMountsOnEmpty,
+                        excludeFlyingOnEmpty,
+                        excludeSpawnMarkerNpcsOnEmpty);
                 state.frozenWithoutPlayers = true;
             }
             return;
@@ -180,15 +192,18 @@ public class AiTickThrottlerService {
         StepComponent farStep = new StepComponent(farSec);
         StepComponent veryFarStep = new StepComponent(veryFarSec);
 
-        Set<String> excludedNpcTypes = new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
+        Set<String> excludedNpcTypes =
+                new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
         boolean excludeMounts = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_MOUNTS);
         boolean excludeFlying = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_FLYING);
+        boolean excludeSpawnMarkerNpcs = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_SPAWN_MARKER_NPCS);
 
         // Reuse seen set to avoid allocating a new ConcurrentHashMap each cycle
         state.seen.clear();
 
         store.forEachEntityParallel(npcQuery, (index, archetypeChunk, commandBuffer) -> {
-            if (isExcluded(index, archetypeChunk, excludedNpcTypes, excludeMounts, excludeFlying)) {
+            if (isExcluded(
+                    index, archetypeChunk, excludedNpcTypes, excludeMounts, excludeFlying, excludeSpawnMarkerNpcs)) {
                 return;
             }
 
@@ -271,9 +286,14 @@ public class AiTickThrottlerService {
     }
 
     private void freezeAllNpcs(
-            Store<EntityStore> store, Set<String> excludedNpcTypes, boolean excludeMounts, boolean excludeFlying) {
+            Store<EntityStore> store,
+            Set<String> excludedNpcTypes,
+            boolean excludeMounts,
+            boolean excludeFlying,
+            boolean excludeSpawnMarkerNpcs) {
         store.forEachEntityParallel(npcQuery, (index, archetypeChunk, commandBuffer) -> {
-            if (isExcluded(index, archetypeChunk, excludedNpcTypes, excludeMounts, excludeFlying)) {
+            if (isExcluded(
+                    index, archetypeChunk, excludedNpcTypes, excludeMounts, excludeFlying, excludeSpawnMarkerNpcs)) {
                 return;
             }
             boolean frozen = archetypeChunk.getComponent(index, frozenType) != null;
@@ -290,8 +310,12 @@ public class AiTickThrottlerService {
     }
 
     private boolean isExcluded(
-            int index, ArchetypeChunk<EntityStore> archetypeChunk,
-            Set<String> excludedNpcTypes, boolean excludeMounts, boolean excludeFlying) {
+            int index,
+            ArchetypeChunk<EntityStore> archetypeChunk,
+            Set<String> excludedNpcTypes,
+            boolean excludeMounts,
+            boolean excludeFlying,
+            boolean excludeSpawnMarkerNpcs) {
         if (playerType != null && archetypeChunk.getArchetype().contains(playerType)) {
             return true;
         }
@@ -305,6 +329,14 @@ public class AiTickThrottlerService {
                 if (states != null && states.flying) {
                     return true;
                 }
+            }
+        }
+        if (excludeSpawnMarkerNpcs) {
+            if (spawnMarkerRefType != null && archetypeChunk.getArchetype().contains(spawnMarkerRefType)) {
+                return true;
+            }
+            if (spawnBeaconRefType != null && archetypeChunk.getArchetype().contains(spawnBeaconRefType)) {
+                return true;
             }
         }
         if (!excludedNpcTypes.isEmpty()) {
@@ -382,6 +414,8 @@ public class AiTickThrottlerService {
             if (npcEntityType == null) npcEntityType = NPCEntity.getComponentType();
             if (mountType == null) mountType = NPCMountComponent.getComponentType();
             if (movementStatesType == null) movementStatesType = MovementStatesComponent.getComponentType();
+            if (spawnMarkerRefType == null) spawnMarkerRefType = SpawnMarkerReference.getComponentType();
+            if (spawnBeaconRefType == null) spawnBeaconRefType = SpawnBeaconReference.getComponentType();
 
             if (npcQuery == null) {
                 npcQuery = Query.and(npcType, transformType);
