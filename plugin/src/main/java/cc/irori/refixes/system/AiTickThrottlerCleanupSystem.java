@@ -43,7 +43,6 @@ public class AiTickThrottlerCleanupSystem extends RefSystem<EntityStore> {
                     commandBuffer.tryRemoveComponent(ref, StepComponent.getComponentType());
                     commandBuffer.tryRemoveComponent(ref, tickThrottledType);
                 }
-                return;
             }
         }
 
