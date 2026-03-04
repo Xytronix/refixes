@@ -48,13 +48,18 @@ public class AiTickThrottlerCleanupSystem extends RefSystem<EntityStore> {
         }
 
         if (cfg.getValue(AiTickThrottlerConfig.LEGACY_CLEANUP)) {
+            ComponentType<EntityStore, TickThrottled> tickThrottledType = TickThrottled.getComponentType();
             boolean hasOrphan = commandBuffer.getComponent(ref, Frozen.getComponentType()) != null
-                    || commandBuffer.getComponent(ref, StepComponent.getComponentType()) != null;
+                    || commandBuffer.getComponent(ref, StepComponent.getComponentType()) != null
+                    || (tickThrottledType != null && commandBuffer.getComponent(ref, tickThrottledType) != null);
             if (hasOrphan
                     && !isNpcTypeExcluded(
                             ref, commandBuffer, cfg, AiTickThrottlerConfig.LEGACY_CLEANUP_EXCLUDED_NPC_TYPES)) {
                 commandBuffer.tryRemoveComponent(ref, Frozen.getComponentType());
                 commandBuffer.tryRemoveComponent(ref, StepComponent.getComponentType());
+                if (tickThrottledType != null) {
+                    commandBuffer.tryRemoveComponent(ref, tickThrottledType);
+                }
             }
         }
     }
