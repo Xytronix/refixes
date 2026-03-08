@@ -37,9 +37,6 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
     public static final ConfigurationKey<EarlyConfig, Boolean> SKIP_EMPTY_LIGHT_SECTIONS =
             new ConfigurationKey<>("SkipEmptyLightSections", ConfigField.BOOLEAN, false);
 
-    public static final ConfigurationKey<EarlyConfig, Boolean> PREFER_EXTERNAL_AUTH =
-            new ConfigurationKey<>("PreferExternalAuth", ConfigField.BOOLEAN, true);
-
     private static final EarlyConfig INSTANCE = new EarlyConfig();
 
     public EarlyConfig() {
@@ -57,8 +54,7 @@ public class EarlyConfig extends Configuration<EarlyConfig> {
                 STAT_RECALC_THROTTLE_ENABLED,
                 STAT_RECALC_INTERVAL,
                 SECTION_CACHE_ENABLED,
-                SKIP_EMPTY_LIGHT_SECTIONS,
-                PREFER_EXTERNAL_AUTH);
+                SKIP_EMPTY_LIGHT_SECTIONS);
     }
 
     public static EarlyConfig get() {

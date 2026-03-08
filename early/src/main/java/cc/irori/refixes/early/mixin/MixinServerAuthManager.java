@@ -43,10 +43,11 @@ public abstract class MixinServerAuthManager {
 
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
+
     @Inject(method = "initializeCredentialStore", at = @At("HEAD"), cancellable = true)
     private void refixes$initCredentialStoreForExternalSession(CallbackInfo ci) {
         if (getAuthMode() != ServerAuthManager.AuthMode.EXTERNAL_SESSION) {
-            return; 
+            return;
         }
 
         AuthCredentialStoreProvider provider = HytaleServer.get().getConfig().getAuthCredentialStoreProvider();
@@ -56,6 +57,15 @@ public abstract class MixinServerAuthManager {
                 AuthCredentialStoreProvider.CODEC.getIdFor(provider.getClass()));
 
         refixes$seedOAuthTokensImpl();
+
+        String profileUuid = System.getenv("HYTALE_PROFILE_UUID");
+        if (profileUuid != null && !profileUuid.isEmpty()) {
+            IAuthCredentialStore store = credentialStore.get();
+            if (store != null) {
+                store.setProfile(java.util.UUID.fromString(profileUuid));
+                refixes$LOGGER.atInfo().log("Profile UUID set from environment: %s", profileUuid);
+            }
+        }
 
         ci.cancel();
     }
