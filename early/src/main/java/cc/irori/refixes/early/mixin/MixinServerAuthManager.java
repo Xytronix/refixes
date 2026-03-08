@@ -1,6 +1,5 @@
 package cc.irori.refixes.early.mixin;
 
-import cc.irori.refixes.early.EarlyOptions;
 import cc.irori.refixes.early.RefixesOptions;
 import cc.irori.refixes.early.util.Logs;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -45,13 +44,6 @@ public abstract class MixinServerAuthManager {
 
     @Inject(method = "initializeCredentialStore", at = @At("TAIL"))
     private void refixes$seedOAuthTokens(CallbackInfo ci) {
-        if (EarlyOptions.isAvailable()
-                && EarlyOptions.PREFER_EXTERNAL_AUTH.isSet()
-                && !EarlyOptions.PREFER_EXTERNAL_AUTH.get()) {
-            refixes$LOGGER.atInfo().log("Skipping OAuth token seeding (PreferExternalAuth=false)");
-            return;
-        }
-
         String accessToken = refixes$readToken(RefixesOptions.OAUTH_ACCESS_TOKEN, "HYTALE_SERVER_OAUTH_ACCESS_TOKEN");
         String refreshToken =
                 refixes$readToken(RefixesOptions.OAUTH_REFRESH_TOKEN, "HYTALE_SERVER_OAUTH_REFRESH_TOKEN");
