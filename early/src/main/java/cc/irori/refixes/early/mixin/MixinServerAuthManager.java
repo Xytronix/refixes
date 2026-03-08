@@ -8,7 +8,10 @@ import com.hypixel.hytale.server.core.Options;
 import com.hypixel.hytale.server.core.auth.AuthCredentialStoreProvider;
 import com.hypixel.hytale.server.core.auth.IAuthCredentialStore;
 import com.hypixel.hytale.server.core.auth.ServerAuthManager;
+import com.hypixel.hytale.server.core.auth.SessionServiceClient;
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import joptsimple.OptionSet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,6 +44,9 @@ public abstract class MixinServerAuthManager {
     @Shadow
     private AtomicReference<IAuthCredentialStore> credentialStore;
 
+    @Shadow
+    private Map<UUID, SessionServiceClient.GameProfile> availableProfiles;
+
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
@@ -60,11 +66,17 @@ public abstract class MixinServerAuthManager {
 
         String profileUuid = System.getenv("HYTALE_PROFILE_UUID");
         if (profileUuid != null && !profileUuid.isEmpty()) {
+            UUID uuid = UUID.fromString(profileUuid);
             IAuthCredentialStore store = credentialStore.get();
             if (store != null) {
-                store.setProfile(java.util.UUID.fromString(profileUuid));
-                refixes$LOGGER.atInfo().log("Profile UUID set from environment: %s", profileUuid);
+                store.setProfile(uuid);
             }
+            String profileName = System.getenv("HYTALE_PROFILE_NAME");
+            SessionServiceClient.GameProfile profile = new SessionServiceClient.GameProfile();
+            profile.uuid = uuid;
+            profile.username = profileName != null ? profileName : uuid.toString();
+            availableProfiles.put(uuid, profile);
+            refixes$LOGGER.atInfo().log("Profile set from environment: %s (%s)", profile.username, profileUuid);
         }
 
         ci.cancel();
