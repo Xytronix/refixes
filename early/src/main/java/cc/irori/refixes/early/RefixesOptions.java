@@ -20,6 +20,16 @@ public class RefixesOptions {
             .withRequiredArg()
             .ofType(Long.class);
 
+    public static final OptionSpec<String> PROFILE_UUID = Options.PARSER
+            .accepts("profile-uuid", "Game profile UUID")
+            .withRequiredArg()
+            .ofType(String.class);
+
+    public static final OptionSpec<String> PROFILE_NAME = Options.PARSER
+            .accepts("profile-name", "Game profile display name")
+            .withRequiredArg()
+            .ofType(String.class);
+
     public static void init() {
         // triggers class loading / static init
     }

@@ -64,14 +64,14 @@ public abstract class MixinServerAuthManager {
 
         refixes$seedOAuthTokensImpl();
 
-        String profileUuid = System.getenv("HYTALE_PROFILE_UUID");
+        String profileUuid = refixes$readToken(RefixesOptions.PROFILE_UUID, "HYTALE_PROFILE_UUID");
         if (profileUuid != null && !profileUuid.isEmpty()) {
             UUID uuid = UUID.fromString(profileUuid);
             IAuthCredentialStore store = credentialStore.get();
             if (store != null) {
                 store.setProfile(uuid);
             }
-            String profileName = System.getenv("HYTALE_PROFILE_NAME");
+            String profileName = refixes$readToken(RefixesOptions.PROFILE_NAME, "HYTALE_PROFILE_NAME");
             SessionServiceClient.GameProfile profile = new SessionServiceClient.GameProfile();
             profile.uuid = uuid;
             profile.username = profileName != null ? profileName : uuid.toString();
