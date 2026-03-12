@@ -65,13 +65,29 @@ public abstract class MixinServerAuthManager {
                 "Auth credential store (external session): %s",
                 AuthCredentialStoreProvider.CODEC.getIdFor(provider.getClass()));
 
-        Instant seededExpiry = refixes$seedOAuthTokensImpl();
+        IAuthCredentialStore store = credentialStore.get();
+        IAuthCredentialStore.OAuthTokens existingTokens = store != null ? store.getTokens() : null;
+
+        if (existingTokens == null || (existingTokens.accessToken() == null && existingTokens.refreshToken() == null)) {
+            refixes$LOGGER.atInfo().log("No persisted tokens found, seeding from environment");
+            Instant seededExpiry = refixes$seedOAuthTokensImpl();
+            if (seededExpiry != null) {
+                setExpiryAndScheduleRefresh(seededExpiry);
+                refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", seededExpiry);
+            }
+        } else {
+            refixes$LOGGER.atInfo().log("Using persisted tokens from credential store");
+            Instant expiresAt = existingTokens.accessTokenExpiresAt();
+            if (expiresAt != null) {
+                setExpiryAndScheduleRefresh(expiresAt);
+                refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", expiresAt);
+            }
+        }
 
         String profileUuid = refixes$readToken(RefixesOptions.PROFILE_UUID, "HYTALE_PROFILE_UUID");
         if (profileUuid != null && !profileUuid.isEmpty()) {
             UUID uuid = UUID.fromString(profileUuid);
-            IAuthCredentialStore store = credentialStore.get();
-            if (store != null) {
+            if (store != null && store.getProfile() == null) {
                 store.setProfile(uuid);
             }
             String profileName = refixes$readToken(RefixesOptions.PROFILE_NAME, "HYTALE_PROFILE_NAME");
@@ -80,11 +96,6 @@ public abstract class MixinServerAuthManager {
             profile.username = profileName != null ? profileName : uuid.toString();
             availableProfiles.put(uuid, profile);
             refixes$LOGGER.atInfo().log("Profile set from environment: %s (%s)", profile.username, profileUuid);
-        }
-
-        if (seededExpiry != null) {
-            setExpiryAndScheduleRefresh(seededExpiry);
-            refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", seededExpiry);
         }
 
         ci.cancel();
