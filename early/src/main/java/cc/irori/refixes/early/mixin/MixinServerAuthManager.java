@@ -2,6 +2,8 @@ package cc.irori.refixes.early.mixin;
 
 import cc.irori.refixes.early.RefixesOptions;
 import cc.irori.refixes.early.util.Logs;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Options;
@@ -10,6 +12,9 @@ import com.hypixel.hytale.server.core.auth.EncryptedAuthCredentialStoreProvider;
 import com.hypixel.hytale.server.core.auth.IAuthCredentialStore;
 import com.hypixel.hytale.server.core.auth.ServerAuthManager;
 import com.hypixel.hytale.server.core.auth.SessionServiceClient;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -57,6 +62,12 @@ public abstract class MixinServerAuthManager {
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
 
+    @Unique
+    private static final Gson refixes$GSON = new Gson();
+
+    @Unique
+    private static final String refixes$AUTH_FILE = ".hytale-auth.json";
+
     @Inject(method = "initializeCredentialStore", at = @At("HEAD"), cancellable = true)
     private void refixes$initCredentialStoreForExternalSession(CallbackInfo ci) {
         if (getAuthMode() != ServerAuthManager.AuthMode.EXTERNAL_SESSION) {
@@ -70,21 +81,28 @@ public abstract class MixinServerAuthManager {
                 "Auth credential store (external session): Encrypted (forced for token persistence)");
 
         IAuthCredentialStore store = credentialStore.get();
-        IAuthCredentialStore.OAuthTokens existingTokens = store != null ? store.getTokens() : null;
 
-        if (existingTokens == null || (existingTokens.accessToken() == null && existingTokens.refreshToken() == null)) {
-            refixes$LOGGER.atInfo().log("No persisted tokens found, seeding from environment");
+        String envAccessToken = refixes$readToken(RefixesOptions.OAUTH_ACCESS_TOKEN, "HYTALE_SERVER_OAUTH_ACCESS_TOKEN");
+        String envRefreshToken = refixes$readToken(RefixesOptions.OAUTH_REFRESH_TOKEN, "HYTALE_SERVER_OAUTH_REFRESH_TOKEN");
+
+        if (envAccessToken != null || envRefreshToken != null) {
+            refixes$LOGGER.atInfo().log("Loading fresh tokens from environment variables");
             Instant seededExpiry = refixes$seedOAuthTokensImpl();
             if (seededExpiry != null) {
                 setExpiryAndScheduleRefresh(seededExpiry);
                 refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", seededExpiry);
             }
         } else {
-            refixes$LOGGER.atInfo().log("Using persisted tokens from credential store");
-            Instant expiresAt = existingTokens.accessTokenExpiresAt();
-            if (expiresAt != null) {
-                setExpiryAndScheduleRefresh(expiresAt);
-                refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", expiresAt);
+            IAuthCredentialStore.OAuthTokens existingTokens = store != null ? store.getTokens() : null;
+            if (existingTokens != null && (existingTokens.accessToken() != null || existingTokens.refreshToken() != null)) {
+                refixes$LOGGER.atInfo().log("Using persisted tokens from credential store");
+                Instant expiresAt = existingTokens.accessTokenExpiresAt();
+                if (expiresAt != null) {
+                    setExpiryAndScheduleRefresh(expiresAt);
+                    refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", expiresAt);
+                }
+            } else {
+                refixes$LOGGER.atWarning().log("No tokens available from environment or storage");
             }
         }
 
@@ -179,6 +197,13 @@ public abstract class MixinServerAuthManager {
         cir.setReturnValue(true);
     }
 
+    @Inject(method = "refreshGameSessionViaOAuth", at = @At("RETURN"))
+    private void refixes$syncTokensAfterOAuthRefresh(CallbackInfoReturnable<Boolean> cir) {
+        if (getAuthMode() == ServerAuthManager.AuthMode.EXTERNAL_SESSION && cir.getReturnValue() == Boolean.TRUE) {
+            refixes$syncTokensToEntrypoint();
+        }
+    }
+
     @Unique
     private Instant refixes$seedOAuthTokensImpl() {
         String accessToken = refixes$readToken(RefixesOptions.OAUTH_ACCESS_TOKEN, "HYTALE_SERVER_OAUTH_ACCESS_TOKEN");
@@ -233,6 +258,45 @@ public abstract class MixinServerAuthManager {
             return envValue;
         }
         return null;
+    }
+
+    @Unique
+    private void refixes$syncTokensToEntrypoint() {
+        try {
+            IAuthCredentialStore store = credentialStore.get();
+            if (store == null) {
+                return;
+            }
+
+            IAuthCredentialStore.OAuthTokens tokens = store.getTokens();
+            if (tokens == null) {
+                return;
+            }
+
+            Path authFile = Paths.get("..", refixes$AUTH_FILE);
+            if (!Files.exists(authFile)) {
+                refixes$LOGGER.atWarning().log("Auth file not found: %s", authFile);
+                return;
+            }
+
+            String content = Files.readString(authFile);
+            JsonObject json = refixes$GSON.fromJson(content, JsonObject.class);
+
+            if (tokens.accessToken() != null) {
+                json.addProperty("access_token", tokens.accessToken());
+            }
+            if (tokens.refreshToken() != null) {
+                json.addProperty("refresh_token", tokens.refreshToken());
+            }
+            if (tokens.accessTokenExpiresAt() != null) {
+                json.addProperty("access_expires", tokens.accessTokenExpiresAt().getEpochSecond());
+            }
+
+            Files.writeString(authFile, refixes$GSON.toJson(json));
+            refixes$LOGGER.atInfo().log("Synced OAuth tokens to external auth file");
+        } catch (Exception e) {
+            refixes$LOGGER.atWarning().log("Failed to sync tokens to external auth file: %s", e.getMessage());
+        }
     }
 
     @Inject(method = "shutdown", at = @At("TAIL"))
