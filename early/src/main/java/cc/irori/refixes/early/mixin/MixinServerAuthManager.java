@@ -304,7 +304,12 @@ public abstract class MixinServerAuthManager {
 
             SessionServiceClient.GameSessionResponse session = gameSession.get();
             if (session != null && session.expiresAt != null) {
-                json.addProperty("session_expires", session.expiresAt.getEpochSecond());
+                try {
+                    Instant expiresAt = Instant.parse(session.expiresAt);
+                    json.addProperty("session_expires", expiresAt.getEpochSecond());
+                } catch (Exception e) {
+                    refixes$LOGGER.atWarning().log("Failed to parse session expiry: %s", e.getMessage());
+                }
             }
 
             UUID profileUuid = store.getProfile();
