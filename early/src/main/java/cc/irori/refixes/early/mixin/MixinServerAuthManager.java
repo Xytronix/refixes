@@ -204,6 +204,13 @@ public abstract class MixinServerAuthManager {
         }
     }
 
+    @Inject(method = "refreshOAuthTokens", at = @At("RETURN"))
+    private void refixes$syncTokensAfterRefresh(boolean force, CallbackInfoReturnable<Boolean> cir) {
+        if (getAuthMode() == ServerAuthManager.AuthMode.EXTERNAL_SESSION && cir.getReturnValue() == Boolean.TRUE) {
+            refixes$syncTokensToEntrypoint();
+        }
+    }
+
     @Unique
     private Instant refixes$seedOAuthTokensImpl() {
         String accessToken = refixes$readToken(RefixesOptions.OAUTH_ACCESS_TOKEN, "HYTALE_SERVER_OAUTH_ACCESS_TOKEN");
