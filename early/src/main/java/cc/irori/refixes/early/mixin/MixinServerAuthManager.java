@@ -59,11 +59,11 @@ public abstract class MixinServerAuthManager {
             return;
         }
 
-        AuthCredentialStoreProvider provider = HytaleServer.get().getConfig().getAuthCredentialStoreProvider();
-        credentialStore.set(provider.createStore());
+        // Force encrypted storage for external session to persist tokens
+        EncryptedAuthCredentialStoreProvider encryptedProvider = new EncryptedAuthCredentialStoreProvider();
+        credentialStore.set(encryptedProvider.createStore());
         refixes$LOGGER.atInfo().log(
-                "Auth credential store (external session): %s",
-                AuthCredentialStoreProvider.CODEC.getIdFor(provider.getClass()));
+                "Auth credential store (external session): Encrypted (forced for token persistence)");
 
         IAuthCredentialStore store = credentialStore.get();
         IAuthCredentialStore.OAuthTokens existingTokens = store != null ? store.getTokens() : null;
@@ -132,10 +132,36 @@ public abstract class MixinServerAuthManager {
             return;
         }
 
-        SessionServiceClient.GameSessionResponse newSession = createGameSession(currentProfile);
+        // Retry session creation with exponential backoff to avoid unnecessary OAuth fallback
+        int maxRetries = 3;
+        long baseDelay = 1000;
+        SessionServiceClient.GameSessionResponse newSession = null;
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                newSession = createGameSession(currentProfile);
+                if (newSession != null) {
+                    break;
+                }
+            } catch (Exception e) {
+                refixes$LOGGER.atWarning().log("Game session creation attempt %d/%d failed: %s",
+                    attempt, maxRetries, e.getMessage());
+            }
+
+            if (attempt < maxRetries) {
+                long delay = baseDelay * (1L << (attempt - 1));
+                refixes$LOGGER.atInfo().log("Retrying in %dms...", delay);
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+
         if (newSession == null) {
-            refixes$LOGGER.atWarning().log("Failed to create new game session via OAuth refresh");
-            cir.setReturnValue(false);
+            refixes$LOGGER.atWarning().log("Failed to create new game session after %d attempts, falling back to OAuth refresh", maxRetries);
             return;
         }
 
