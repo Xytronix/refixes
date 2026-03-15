@@ -95,11 +95,19 @@ public abstract class MixinServerAuthManager {
         } else {
             IAuthCredentialStore.OAuthTokens existingTokens = store != null ? store.getTokens() : null;
             if (existingTokens != null && (existingTokens.accessToken() != null || existingTokens.refreshToken() != null)) {
-                refixes$LOGGER.atInfo().log("Using persisted tokens from credential store");
                 Instant expiresAt = existingTokens.accessTokenExpiresAt();
-                if (expiresAt != null) {
+                boolean accessValid = expiresAt != null && expiresAt.isAfter(Instant.now().plusSeconds(60));
+
+                if (accessValid) {
+                    refixes$LOGGER.atInfo().log("Using persisted tokens from credential store (expires: %s)", expiresAt);
                     setExpiryAndScheduleRefresh(expiresAt);
-                    refixes$LOGGER.atInfo().log("Token refresh scheduler started (expires: %s)", expiresAt);
+                } else if (existingTokens.refreshToken() != null) {
+                    refixes$LOGGER.atInfo().log("Access token expired, but refresh token available. Attempting refresh");
+                    if (expiresAt != null) {
+                        setExpiryAndScheduleRefresh(expiresAt);
+                    }
+                } else {
+                    refixes$LOGGER.atWarning().log("Stored tokens expired and no refresh token available");
                 }
             } else {
                 refixes$LOGGER.atWarning().log("No tokens available from environment or storage");
