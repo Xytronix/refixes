@@ -147,9 +147,6 @@ public class Refixes extends JavaPlugin {
 
         EarlyOptions.FORCE_SKIP_MOD_VALIDATION.setSupplier(
                 () -> config.getValue(EarlyConfig.FORCE_SKIP_MOD_VALIDATION));
-        EarlyOptions.DISABLE_FLUID_PRE_PROCESS.setSupplier(
-                () -> config.getValue(EarlyConfig.DISABLE_FLUID_PRE_PROCESS));
-        EarlyOptions.ASYNC_BLOCK_PRE_PROCESS.setSupplier(() -> config.getValue(EarlyConfig.ASYNC_BLOCK_PRE_PROCESS));
         EarlyOptions.MAX_CHUNKS_PER_SECOND.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_SECOND));
         EarlyOptions.MAX_CHUNKS_PER_TICK.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_TICK));
         EarlyOptions.CHUNK_UNLOAD_OFFSET.setSupplier(
@@ -157,34 +154,28 @@ public class Refixes extends JavaPlugin {
         EarlyOptions.VANILLA_KEEP_SPAWN_LOADED.setSupplier(
                 () -> config.getValue(EarlyConfig.VANILLA_KEEP_SPAWN_LOADED));
 
-        EarlyOptions.CYLINDER_VISIBILITY_ENABLED.setSupplier(
-                () -> cylinderVisibilityConfig.getValue(CylinderVisibilityConfig.ENABLED));
         EarlyOptions.CYLINDER_VISIBILITY_HEIGHT_MULTIPLIER.setSupplier(
                 () -> cylinderVisibilityConfig.getValue(CylinderVisibilityConfig.HEIGHT_MULTIPLIER));
 
-        EarlyOptions.KDTREE_OPTIMIZATION_OPTIMIZE_SORT.setSupplier(
-                () -> kdTreeOptimizationConfig.getValue(KDTreeOptimizationConfig.OPTIMIZE_KDTREE_SORT));
         EarlyOptions.KDTREE_OPTIMIZATION_THRESHOLD.setSupplier(
                 () -> kdTreeOptimizationConfig.getValue(KDTreeOptimizationConfig.SPATIAL_FAST_SORT_THRESHOLD));
 
-        EarlyOptions.SHARED_INSTANCES_ENABLED.setSupplier(
-                () -> sharedInstanceConfig.getValue(SharedInstanceConfig.ENABLED));
         EarlyOptions.SHARED_INSTANCES_EXCLUDED_PREFIXES.setSupplier(
                 () -> sharedInstanceConfig.getValue(SharedInstanceConfig.EXCLUDED_PREFIXES));
 
-        EarlyOptions.PARALLEL_ENTITY_TICKING.setSupplier(
-                () -> experimentalConfig.getValue(ExperimentalConfig.PARALLEL_ENTITY_TICKING));
+        EarlyOptions.PARALLEL_STEERING_THRESHOLD.setSupplier(
+                () -> experimentalConfig.getValue(ExperimentalConfig.PARALLEL_STEERING_THRESHOLD));
 
-        EarlyOptions.BLOCK_ENTITY_SLEEP_ENABLED.setSupplier(
-                () -> config.getValue(EarlyConfig.BLOCK_ENTITY_SLEEP_ENABLED));
         EarlyOptions.BLOCK_ENTITY_SLEEP_INTERVAL.setSupplier(
                 () -> config.getValue(EarlyConfig.BLOCK_ENTITY_SLEEP_INTERVAL));
-        EarlyOptions.STAT_RECALC_THROTTLE_ENABLED.setSupplier(
-                () -> config.getValue(EarlyConfig.STAT_RECALC_THROTTLE_ENABLED));
         EarlyOptions.STAT_RECALC_INTERVAL.setSupplier(() -> config.getValue(EarlyConfig.STAT_RECALC_INTERVAL));
-        EarlyOptions.SECTION_CACHE_ENABLED.setSupplier(() -> config.getValue(EarlyConfig.SECTION_CACHE_ENABLED));
-        EarlyOptions.SKIP_EMPTY_LIGHT_SECTIONS.setSupplier(
-                () -> config.getValue(EarlyConfig.SKIP_EMPTY_LIGHT_SECTIONS));
+
+        EarlyOptions.PATHFINDING_MAX_PATH_LENGTH.setSupplier(
+                () -> config.getValue(EarlyConfig.PATHFINDING_MAX_PATH_LENGTH));
+        EarlyOptions.PATHFINDING_OPEN_NODES_LIMIT.setSupplier(
+                () -> config.getValue(EarlyConfig.PATHFINDING_OPEN_NODES_LIMIT));
+        EarlyOptions.PATHFINDING_TOTAL_NODES_LIMIT.setSupplier(
+                () -> config.getValue(EarlyConfig.PATHFINDING_TOTAL_NODES_LIMIT));
 
         EarlyOptions.setAvailable(true);
 

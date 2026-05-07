@@ -31,9 +31,6 @@ public abstract class MixinBlockSection {
             int sectionIndex,
             ObjectPositionBlockFunction<?, ?, ?> acceptor,
             CallbackInfoReturnable<Integer> cir) {
-        if (!EarlyOptions.isAvailable() || !EarlyOptions.BLOCK_ENTITY_SLEEP_ENABLED.get()) {
-            return;
-        }
         if (tickingBlocksCountCopy == 0) {
             return;
         }

@@ -5,6 +5,7 @@ import cc.irori.refixes.util.Logs;
 import com.hypixel.hytale.builtin.instances.InstancesPlugin;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.HytaleServer;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.ShutdownReason;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -32,9 +33,7 @@ public class WatchdogService {
 
     private volatile State state = State.ACTIVATING;
 
-    public WatchdogService() {
-        lastDefaultWorld = Universe.get().getDefaultWorld();
-    }
+    public WatchdogService() {}
 
     public State getState() {
         return state;
@@ -47,11 +46,14 @@ public class WatchdogService {
 
     public void unregisterService() {
         LOGGER.atInfo().log("Stopping server watchdog");
-        watchdogThread.interrupt();
+        if (watchdogThread != null) {
+            watchdogThread.interrupt();
+        }
     }
 
     private void start() {
-        LOGGER.atInfo().log("Starting server watchdog (default world: %s)", lastDefaultWorld.getName());
+        String worldName = lastDefaultWorld != null ? lastDefaultWorld.getName() : "<not loaded>";
+        LOGGER.atInfo().log("Starting server watchdog (default world: %s)", worldName);
         watchdogThread = new Thread(this::runWatchdog, "Refixes-Watchdog");
         watchdogThread.setDaemon(true);
         watchdogThread.start();
@@ -193,7 +195,7 @@ public class WatchdogService {
             } else if (response != null) {
                 long elapsed = System.currentTimeMillis() - response;
                 if (elapsed > config.getValue(WatchdogConfig.THREAD_TIMEOUT_MS)) {
-                    LOGGER.atSevere().log("World %s did not respond for %.2f seconds.", worldName, elapsed / 1000);
+                    LOGGER.atSevere().log("World %s did not respond for %.2f seconds.", worldName, elapsed / 1000.0);
                     restart = true;
                 }
             }
@@ -294,7 +296,8 @@ public class WatchdogService {
         dumpThreads();
 
         Thread.sleep(5000);
-        HytaleServer.get().shutdownServer(ShutdownReason.CRASH.withMessage("Watchdog triggered a shutdown"));
+        HytaleServer.get()
+                .shutdownServer(ShutdownReason.CRASH.withMessage(Message.raw("Watchdog triggered a shutdown")));
         handleShutdownTimeout();
     }
 
