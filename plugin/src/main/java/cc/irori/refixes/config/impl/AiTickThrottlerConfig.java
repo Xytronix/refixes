@@ -14,6 +14,9 @@ public class AiTickThrottlerConfig extends Configuration<AiTickThrottlerConfig> 
     public static final ConfigurationKey<AiTickThrottlerConfig, Integer> MAX_CYCLE_MS =
             new ConfigurationKey<>("MaxCycleMs", ConfigField.INTEGER, 30);
 
+    public static final ConfigurationKey<AiTickThrottlerConfig, Integer> SCAN_SHARDS =
+            new ConfigurationKey<>("ScanShards", ConfigField.INTEGER, 1);
+
     // NPCs within this chunk distance get full tick rate (~64 blocks)
     public static final ConfigurationKey<AiTickThrottlerConfig, Integer> NEAR_CHUNKS =
             new ConfigurationKey<>("NearChunks", ConfigField.INTEGER, 2);
@@ -64,6 +67,7 @@ public class AiTickThrottlerConfig extends Configuration<AiTickThrottlerConfig> 
                 ENABLED,
                 UPDATE_INTERVAL_MS,
                 MAX_CYCLE_MS,
+                SCAN_SHARDS,
                 NEAR_CHUNKS,
                 MID_CHUNKS,
                 FAR_CHUNKS,

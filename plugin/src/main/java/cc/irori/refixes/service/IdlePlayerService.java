@@ -13,7 +13,9 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -72,26 +74,31 @@ public class IdlePlayerService {
 
         long now = System.currentTimeMillis();
         long timeoutMs = Math.max(30, cfg.getValue(IdlePlayerHandlerConfig.IDLE_TIMEOUT_SECONDS)) * 1000L;
+        double movementThreshold = cfg.getValue(IdlePlayerHandlerConfig.MOVEMENT_THRESHOLD);
 
+        Set<UUID> onlineUuids = new HashSet<>();
         for (PlayerRef playerRef : Universe.get().getPlayers()) {
             if (playerRef == null) {
                 continue;
             }
             UUID uuid = playerRef.getUuid();
+            onlineUuids.add(uuid);
             PlayerIdleState state = playerStates.computeIfAbsent(uuid, _u -> new PlayerIdleState());
 
             Vector3d currentPos = playerRef.getTransform().getPosition();
 
             // Detect movement
-            if (state.lastPosition != null
-                    && hasPlayerMoved(
-                            state.lastPosition, currentPos, cfg.getValue(IdlePlayerHandlerConfig.MOVEMENT_THRESHOLD))) {
+            if (state.lastPosition != null && hasPlayerMoved(state.lastPosition, currentPos, movementThreshold)) {
                 state.markActivity();
                 if (state.wasIdle) {
                     restorePlayerSettings(playerRef, state, cfg);
                 }
             }
-            state.lastPosition = new Vector3d(currentPos);
+            if (state.lastPosition == null) {
+                state.lastPosition = new Vector3d(currentPos);
+            } else {
+                state.lastPosition.set(currentPos);
+            }
 
             if (!state.wasIdle && now - state.lastActivityMs > timeoutMs) {
                 applyIdleSettings(playerRef, state, cfg);
@@ -99,14 +106,7 @@ public class IdlePlayerService {
         }
 
         // Clean up disconnected players
-        playerStates.keySet().removeIf(uuid -> {
-            for (PlayerRef p : Universe.get().getPlayers()) {
-                if (p != null && p.getUuid().equals(uuid)) {
-                    return false;
-                }
-            }
-            return true;
-        });
+        playerStates.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     public int getIdleCount() {
@@ -117,6 +117,11 @@ public class IdlePlayerService {
             }
         }
         return idle;
+    }
+
+    public boolean isIdle(UUID uuid) {
+        PlayerIdleState state = playerStates.get(uuid);
+        return state != null && state.wasIdle;
     }
 
     private void applyIdleSettings(PlayerRef playerRef, PlayerIdleState state, IdlePlayerHandlerConfig cfg) {

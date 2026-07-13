@@ -4,7 +4,7 @@ import cc.irori.refixes.command.ChunkLoaderCommand;
 import cc.irori.refixes.compat.BlackboxBridge;
 import cc.irori.refixes.component.TickThrottled;
 import cc.irori.refixes.config.impl.AiTickThrottlerConfig;
-import cc.irori.refixes.config.impl.ChunkUnloaderConfig;
+import cc.irori.refixes.config.impl.ChunkLoaderConfig;
 import cc.irori.refixes.config.impl.CylinderVisibilityConfig;
 import cc.irori.refixes.config.impl.EarlyConfig;
 import cc.irori.refixes.config.impl.ExperimentalConfig;
@@ -16,18 +16,14 @@ import cc.irori.refixes.config.impl.PerPlayerHotRadiusConfig;
 import cc.irori.refixes.config.impl.RefixesConfig;
 import cc.irori.refixes.config.impl.SharedInstanceConfig;
 import cc.irori.refixes.config.impl.SystemConfig;
-import cc.irori.refixes.config.impl.TickSleepOptimizationConfig;
 import cc.irori.refixes.config.impl.WatchdogConfig;
 import cc.irori.refixes.copychunks.CopyChunksCommand;
 import cc.irori.refixes.copychunks.PasteChunksCommand;
 import cc.irori.refixes.early.EarlyOptions;
 import cc.irori.refixes.early.util.PathfindingBudget;
-import cc.irori.refixes.early.util.TickSleepOptimization;
 import cc.irori.refixes.listener.ChunkLoaderWorldListener;
-import cc.irori.refixes.listener.InstancePositionTracker;
 import cc.irori.refixes.listener.SharedInstanceBootUnloader;
 import cc.irori.refixes.listener.UnknownBlockCleaner;
-import cc.irori.refixes.service.ActiveChunkUnloader;
 import cc.irori.refixes.service.AiTickThrottlerService;
 import cc.irori.refixes.service.ChunkLoaderService;
 import cc.irori.refixes.service.IdlePlayerService;
@@ -37,7 +33,7 @@ import cc.irori.refixes.service.WatchdogService;
 import cc.irori.refixes.system.AiTickThrottlerCleanupSystem;
 import cc.irori.refixes.system.CraftingManagerFixSystem;
 import cc.irori.refixes.system.EntityDespawnTimerSystem;
-import cc.irori.refixes.system.RespawnBlockFixSystem;
+import cc.irori.refixes.system.SharedInstanceChunkSaveSkipSystem;
 import cc.irori.refixes.system.SharedInstancePersistenceSystem;
 import cc.irori.refixes.util.Early;
 import cc.irori.refixes.util.Logs;
@@ -62,10 +58,8 @@ public class Refixes extends JavaPlugin {
 
     private ComponentType<EntityStore, TickThrottled> tickThrottledComponent;
 
-    private InstancePositionTracker instancePositionTracker;
     private SharedInstanceBootUnloader sharedInstanceBootUnloader;
 
-    private ActiveChunkUnloader activeChunkUnloader;
     private PerPlayerHotRadiusService perPlayerHotRadiusService;
     private WatchdogService watchdogService;
 
@@ -102,10 +96,8 @@ public class Refixes extends JavaPlugin {
 
     @Override
     protected void start() {
-        if (activeChunkUnloader != null) {
-            activeChunkUnloader.registerService();
-        }
         if (perPlayerHotRadiusService != null) {
+            perPlayerHotRadiusService.setIdlePlayerService(idlePlayerService);
             perPlayerHotRadiusService.registerService();
         }
 
@@ -130,9 +122,6 @@ public class Refixes extends JavaPlugin {
 
     @Override
     protected void shutdown() {
-        if (activeChunkUnloader != null) {
-            activeChunkUnloader.unregisterService();
-        }
         if (perPlayerHotRadiusService != null) {
             perPlayerHotRadiusService.unregisterService();
         }
@@ -165,17 +154,9 @@ public class Refixes extends JavaPlugin {
         SharedInstanceConfig sharedInstanceConfig = SharedInstanceConfig.get();
         ExperimentalConfig experimentalConfig = ExperimentalConfig.get();
 
-        if (config.getValue(EarlyConfig.FORCE_SKIP_MOD_VALIDATION)) {
-            LOGGER.atSevere().log(
-                    "Force Skip Mod Validation is enabled! ALWAYS remember to check your mods are working correctly after server updates.");
-        }
-
-        EarlyOptions.FORCE_SKIP_MOD_VALIDATION.setSupplier(
-                () -> config.getValue(EarlyConfig.FORCE_SKIP_MOD_VALIDATION));
         EarlyOptions.MAX_CHUNKS_PER_SECOND.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_SECOND));
         EarlyOptions.MAX_CHUNKS_PER_TICK.setSupplier(() -> config.getValue(EarlyConfig.MAX_CHUNKS_PER_TICK));
-        EarlyOptions.CHUNK_UNLOAD_OFFSET.setSupplier(
-                () -> ChunkUnloaderConfig.get().getValue(ChunkUnloaderConfig.UNLOAD_DISTANCE_OFFSET));
+        EarlyOptions.CHUNK_UNLOAD_OFFSET.setSupplier(() -> config.getValue(EarlyConfig.UNLOAD_DISTANCE_OFFSET));
         EarlyOptions.VANILLA_KEEP_SPAWN_LOADED.setSupplier(
                 () -> config.getValue(EarlyConfig.VANILLA_KEEP_SPAWN_LOADED));
 
@@ -190,8 +171,6 @@ public class Refixes extends JavaPlugin {
 
         EarlyOptions.PARALLEL_STEERING_THRESHOLD.setSupplier(
                 () -> experimentalConfig.getValue(ExperimentalConfig.PARALLEL_STEERING_THRESHOLD));
-
-        EarlyOptions.STAT_RECALC_INTERVAL.setSupplier(() -> config.getValue(EarlyConfig.STAT_RECALC_INTERVAL));
 
         EarlyOptions.PATHFINDING_MAX_PATH_LENGTH.setSupplier(
                 () -> config.getValue(EarlyConfig.PATHFINDING_MAX_PATH_LENGTH));
@@ -211,12 +190,6 @@ public class Refixes extends JavaPlugin {
         EarlyOptions.BACKPRESSURE_GRACE_MS.setSupplier(() -> config.getValue(EarlyConfig.BACKPRESSURE_GRACE_MS));
 
         EarlyOptions.setAvailable(true);
-
-        /* Tick Sleep Optimization */
-        TickSleepOptimizationConfig tsoConfig = TickSleepOptimizationConfig.get();
-        TickSleepOptimization.updateSleepOffset(
-                tsoConfig.getValue(TickSleepOptimizationConfig.ENABLED),
-                tsoConfig.getValue(TickSleepOptimizationConfig.SPIN_THRESHOLD_NANOS));
     }
 
     private void registerComponents() {
@@ -229,38 +202,26 @@ public class Refixes extends JavaPlugin {
 
         // Listeners
         applyFix(
-                "Instance position tracker",
-                ListenerConfig.get().getValue(ListenerConfig.INSTANCE_POSITION_TRACKER),
-                () -> {
-                    instancePositionTracker = new InstancePositionTracker();
-                    instancePositionTracker.registerEvents(this);
-                });
-        applyFix(
                 "Unknown block cleaner",
                 ListenerConfig.get().getValue(ListenerConfig.UNKNOWN_BLOCK_CLEANER),
                 () -> UnknownBlockCleaner.registerEvents(this));
 
         // Systems
         applyFix(
-                "Respawn block fix",
-                SystemConfig.get().getValue(SystemConfig.RESPAWN_BLOCK),
-                () -> getChunkStoreRegistry().registerSystem(new RespawnBlockFixSystem()));
-        applyFix(
                 "Crafting manager fix",
-                SystemConfig.get().getValue(SystemConfig.CRAFTING_MANAGER)
-                        && Early.isEnabledLogging("Crafting manager fix"),
+                SystemConfig.get().getValue(SystemConfig.CRAFTING_MANAGER),
                 () -> getEntityStoreRegistry().registerSystem(new CraftingManagerFixSystem()));
         applyFix(
                 "Entity despawn timer",
                 SystemConfig.get().getValue(SystemConfig.ENTITY_DESPAWN_TIMER),
                 () -> getEntityStoreRegistry().registerSystem(new EntityDespawnTimerSystem()));
-        getEntityStoreRegistry().registerSystem(new AiTickThrottlerCleanupSystem());
+        applyFix(
+                "AI throttler cleanup",
+                AiTickThrottlerConfig.get().getValue(AiTickThrottlerConfig.CLEANUP_FROZEN_ENTITIES)
+                        || AiTickThrottlerConfig.get().getValue(AiTickThrottlerConfig.LEGACY_CLEANUP),
+                () -> getEntityStoreRegistry().registerSystem(new AiTickThrottlerCleanupSystem()));
 
         // Services
-        applyFix(
-                "Active chunk unloader",
-                ChunkUnloaderConfig.get().getValue(ChunkUnloaderConfig.ENABLED),
-                () -> activeChunkUnloader = new ActiveChunkUnloader());
         applyFix(
                 "Per-player hot radius",
                 PerPlayerHotRadiusConfig.get().getValue(PerPlayerHotRadiusConfig.ENABLED),
@@ -283,14 +244,17 @@ public class Refixes extends JavaPlugin {
                 IdleWorldPauseConfig.get().getValue(IdleWorldPauseConfig.ENABLED),
                 () -> idleWorldPauseService = new IdleWorldPauseService());
 
-        getCommandRegistry().registerCommand(new ChunkLoaderCommand(chunkLoaderService));
+        applyFix("Chunk loader", ChunkLoaderConfig.get().getValue(ChunkLoaderConfig.ENABLED), () -> {
+            getCommandRegistry().registerCommand(new ChunkLoaderCommand(chunkLoaderService));
+            new ChunkLoaderWorldListener(chunkLoaderService).registerEvents(this);
+        });
+
         getCommandRegistry().registerCommand(new CopyChunksCommand());
         getCommandRegistry().registerCommand(new PasteChunksCommand());
 
-        new ChunkLoaderWorldListener(chunkLoaderService).registerEvents(this);
-
         if (Early.isEnabled()) {
             getChunkStoreRegistry().registerSystem(new SharedInstancePersistenceSystem());
+            getChunkStoreRegistry().registerSystem(new SharedInstanceChunkSaveSkipSystem());
             sharedInstanceBootUnloader = new SharedInstanceBootUnloader();
             sharedInstanceBootUnloader.registerEvents(this);
         }

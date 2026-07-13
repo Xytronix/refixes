@@ -6,9 +6,6 @@ public final class EarlyOptions {
 
     private static boolean available = false;
 
-    /* Force Skip Mod Validation */
-    public static final Value<Boolean> FORCE_SKIP_MOD_VALIDATION = new Value<>(false);
-
     /* Cylinder Visibility */
     public static final Value<Double> CYLINDER_VISIBILITY_HEIGHT_MULTIPLIER = new Value<>(2.0);
 
@@ -23,9 +20,6 @@ public final class EarlyOptions {
 
     /* Shared Instances */
     public static final Value<String[]> SHARED_INSTANCES_EXCLUDED_PREFIXES = new Value<>(new String[0]);
-
-    /* Stat Recalculation Throttle */
-    public static final Value<Integer> STAT_RECALC_INTERVAL = new Value<>(4);
 
     /* Pathfinding */
     public static final Value<Integer> PATHFINDING_MAX_PATH_LENGTH = new Value<>(200);

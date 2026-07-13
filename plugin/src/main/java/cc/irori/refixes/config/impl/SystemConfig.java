@@ -6,8 +6,6 @@ import cc.irori.refixes.config.field.ConfigField;
 
 public class SystemConfig extends Configuration<SystemConfig> {
 
-    public static final ConfigurationKey<SystemConfig, Boolean> RESPAWN_BLOCK =
-            new ConfigurationKey<>("RespawnBlock", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<SystemConfig, Boolean> CRAFTING_MANAGER =
             new ConfigurationKey<>("CraftingManager", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<SystemConfig, Boolean> ENTITY_DESPAWN_TIMER =
@@ -18,7 +16,7 @@ public class SystemConfig extends Configuration<SystemConfig> {
     private static final SystemConfig INSTANCE = new SystemConfig();
 
     public SystemConfig() {
-        register(RESPAWN_BLOCK, CRAFTING_MANAGER, ENTITY_DESPAWN_TIMER, ENTITY_DESPAWN_TIMER_CONFIG);
+        register(CRAFTING_MANAGER, ENTITY_DESPAWN_TIMER, ENTITY_DESPAWN_TIMER_CONFIG);
     }
 
     public static SystemConfig get() {

@@ -1,7 +1,5 @@
 package cc.irori.refixes.system;
 
-import cc.irori.refixes.early.mixin.MixinCraftingManagerAccessor;
-import cc.irori.refixes.util.Early;
 import cc.irori.refixes.util.Logs;
 import com.hypixel.hytale.builtin.crafting.component.CraftingManager;
 import com.hypixel.hytale.component.ArchetypeChunk;
@@ -21,12 +19,6 @@ public class CraftingManagerFixSystem extends EntityTickingSystem<EntityStore> {
 
     private static final HytaleLogger LOGGER = Logs.logger();
 
-    private boolean disabled = false;
-
-    public CraftingManagerFixSystem() {
-        Early.requireEnabled();
-    }
-
     @Override
     public void tick(
             float dt,
@@ -34,17 +26,9 @@ public class CraftingManagerFixSystem extends EntityTickingSystem<EntityStore> {
             @NonNull ArchetypeChunk<EntityStore> archetypeChunk,
             @NonNull Store<EntityStore> store,
             @NonNull CommandBuffer<EntityStore> commandBuffer) {
-        if (disabled) return;
         try {
             CraftingManager craftingManager = archetypeChunk.getComponent(index, CraftingManager.getComponentType());
-            if (craftingManager == null) return;
-            if (!(craftingManager instanceof MixinCraftingManagerAccessor accessor)) {
-                disabled = true;
-                LOGGER.atSevere().log(
-                        "CraftingManager is not a MixinCraftingManagerAccessor — Refixes Mixins were not applied (is Hyinit running?). Disabling crafting manager fix.");
-                return;
-            }
-            if (accessor.getBlockType() == null) return;
+            if (craftingManager == null || !craftingManager.hasBenchSet()) return;
             Player player = archetypeChunk.getComponent(index, Player.getComponentType());
             if (player == null || !player.getWindowManager().getWindows().isEmpty()) return;
             PlayerRef playerRef = archetypeChunk.getComponent(index, PlayerRef.getComponentType());

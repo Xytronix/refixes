@@ -5,8 +5,6 @@ import cc.irori.refixes.config.ConfigurationKey;
 
 public class ServiceConfig extends Configuration<ServiceConfig> {
 
-    private static final ConfigurationKey<ServiceConfig, ChunkUnloaderConfig> CHUNK_UNLOADER_CONFIG =
-            ConfigurationKey.subConfig("ChunkUnloader", ChunkUnloaderConfig.get());
     private static final ConfigurationKey<ServiceConfig, PerPlayerHotRadiusConfig> PER_PLAYER_RADIUS_CONFIG =
             ConfigurationKey.subConfig("PerPlayerHotRadius", PerPlayerHotRadiusConfig.get());
     private static final ConfigurationKey<ServiceConfig, IdlePlayerHandlerConfig> IDLE_PLAYER_HANDLER_CONFIG =
@@ -20,7 +18,6 @@ public class ServiceConfig extends Configuration<ServiceConfig> {
 
     public ServiceConfig() {
         register(
-                CHUNK_UNLOADER_CONFIG,
                 PER_PLAYER_RADIUS_CONFIG,
                 IDLE_PLAYER_HANDLER_CONFIG,
                 AI_TICK_THROTTLER_CONFIG,

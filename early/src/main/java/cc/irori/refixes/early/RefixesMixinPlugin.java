@@ -47,10 +47,6 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     List.of("MixinStoreSystemMetrics")),
             new MixinToggle(new String[] {"Mixins", "Optimizations", "KDTree"}, true, List.of("MixinKDTree")),
             new MixinToggle(
-                    new String[] {"Mixins", "Optimizations", "ChunkSavingSystems"},
-                    true,
-                    List.of("MixinChunkSavingSystems")),
-            new MixinToggle(
                     new String[] {"Mixins", "Optimizations", "ChunkUnloadingSystem"},
                     true,
                     List.of(
@@ -65,16 +61,44 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     new String[] {"Mixins", "Optimizations", "SpawnManagerRecalc"},
                     true,
                     List.of("MixinWorldSpawnManager")),
+            new MixinToggle(new String[] {"Mixins", "Optimizations", "AStarBase"}, true, List.of("MixinAStarBase")),
             new MixinToggle(
-                    new String[] {"Mixins", "Experimental", "ParallelEntityTicking"},
+                    new String[] {"Mixins", "Optimizations", "RepulsionTicker"}, true, List.of("MixinRepulsionTicker")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "CollectVisible"},
                     true,
                     false,
-                    List.of("MixinEntityTickingSystem", "MixinSteeringSystem", "MixinStore")),
+                    List.of("MixinCollectVisibleParallel")),
             new MixinToggle(
-                    new String[] {"Mixins", "Experimental", "ParallelSpatialCollection"},
+                    new String[] {"Mixins", "Experimental", "Parallel", "SpatialCollection"},
                     true,
                     false,
                     List.of("MixinSpatialSystem")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "AllSystems"},
+                    true,
+                    false,
+                    List.of("MixinEntityTickingSystem")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "Steering"},
+                    true,
+                    false,
+                    List.of("MixinSteeringSystem")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "RelaxStoreAsserts"},
+                    true,
+                    false,
+                    List.of("MixinStore")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "FluidReplicateChanges"},
+                    true,
+                    false,
+                    List.of("MixinFluidReplicateChanges")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "Parallel", "ChunkReplicateChanges"},
+                    true,
+                    false,
+                    List.of("MixinChunkReplicateChanges")),
             new MixinToggle(
                     new String[] {"Mixins", "Experimental", "ShutdownSaveTimeout"},
                     true,
@@ -96,30 +120,20 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     false,
                     List.of("MixinFloodLightCalculation")),
             new MixinToggle(
-                    new String[] {"Mixins", "Experimental", "StatRecalcThrottle"},
-                    true,
-                    false,
-                    List.of("MixinStatModifiersManager")),
-            new MixinToggle(
                     new String[] {"Mixins", "Experimental", "SharedInstances"},
                     true,
                     false,
                     List.of("MixinInstancesPlugin")),
             new MixinToggle(
-                    new String[] {"Mixins", "Experimental", "FluidReplicateChanges"},
-                    true,
-                    false,
-                    List.of("MixinFluidReplicateChanges")),
-            new MixinToggle(
-                    new String[] {"Mixins", "Experimental", "ChunkReplicateChanges"},
-                    true,
-                    false,
-                    List.of("MixinChunkReplicateChanges")),
-            new MixinToggle(
                     new String[] {"Mixins", "Experimental", "ConnectionBackpressure"},
                     true,
                     false,
                     List.of("MixinNettyUtilBackpressure")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Experimental", "TickSurvival"},
+                    true,
+                    false,
+                    List.of("MixinStoreTickGuard")),
             new MixinToggle(
                     new String[] {"Mixins", "Crashfixes", "BlockSectionSafety"},
                     true,
@@ -137,10 +151,6 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     new String[] {"Mixins", "Crashfixes", "EntityChunkLoadingSystem"},
                     true,
                     List.of("MixinEntityChunkLoadingSystem")),
-            new MixinToggle(new String[] {"Mixins", "Crashfixes", "AStarBase"}, true, List.of("MixinAStarBase")),
-            new MixinToggle(
-                    new String[] {"Mixins", "Crashfixes", "RepulsionTicker"}, true, List.of("MixinRepulsionTicker")),
-            new MixinToggle(new String[] {"Mixins", "Crashfixes", "UpdateModule"}, true, List.of("MixinUpdateModule")),
             new MixinToggle(
                     new String[] {"Mixins", "Crashfixes", "CollisionModule"}, true, List.of("MixinCollisionModule")),
             new MixinToggle(
@@ -166,6 +176,8 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     true,
                     List.of("MixinDeployableOwnerComponent")),
             new MixinToggle(new String[] {"Mixins", "Crashfixes", "MountPlugin"}, true, List.of("MixinMountPlugin")),
+            new MixinToggle(
+                    new String[] {"Mixins", "Crashfixes", "DespawnSystem"}, true, List.of("MixinDespawnSystem")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "ArchetypeChunk"}, true, List.of("MixinArchetypeChunk")),
             new MixinToggle(
                     new String[] {"Mixins", "Helpers", "BeaconAddRemoveSystem"},
@@ -178,11 +190,8 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
             new MixinToggle(
                     new String[] {"Mixins", "Helpers", "BlockHealthSystem"}, true, List.of("MixinBlockHealthSystem")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "CommandBuffer"}, true, List.of("MixinCommandBuffer")),
-            new MixinToggle(
-                    new String[] {"Mixins", "Helpers", "CraftingManagerAccessor"},
-                    true,
-                    List.of("MixinCraftingManagerAccessor")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "EntityViewer"}, true, List.of("MixinEntityViewer")),
+            new MixinToggle(new String[] {"Mixins", "Helpers", "FluidSection"}, true, List.of("MixinFluidSection")),
             new MixinToggle(
                     new String[] {"Mixins", "Helpers", "GamePacketHandler"}, true, List.of("MixinGamePacketHandler")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "HytaleServer"}, true, List.of("MixinHytaleServer")),
@@ -227,6 +236,7 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     new String[] {"Mixins", "Helpers", "TickingSpawnMarkerSystem"},
                     true,
                     List.of("MixinTickingSpawnMarkerSystem")),
+            new MixinToggle(new String[] {"Mixins", "Helpers", "TickSleep"}, true, List.of("MixinTickSleep")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "TickingThread"}, true, List.of("MixinTickingThread")),
             new MixinToggle(
                     new String[] {"Mixins", "Helpers", "TickingThreadAssert"},
@@ -247,6 +257,7 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                     new String[] {"Mixins", "Helpers", "UpdateDownloadCommand"},
                     true,
                     List.of("MixinUpdateDownloadCommand")),
+            new MixinToggle(new String[] {"Mixins", "Helpers", "UpdateModule"}, true, List.of("MixinUpdateModule")),
             new MixinToggle(
                     new String[] {"Mixins", "Helpers", "WorldPauseCommand"}, true, List.of("MixinWorldPauseCommand")),
             new MixinToggle(new String[] {"Mixins", "Helpers", "World"}, true, List.of("MixinWorld")),
@@ -280,6 +291,16 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
                 disabled.addAll(toggle.mixins);
             }
             setBoolean(config, toggle.jsonPath, enabled == toggle.enabledWhen);
+        }
+
+        boolean parallelAllSystems = !disabled.contains("MixinEntityTickingSystem");
+        boolean parallelSteering = !disabled.contains("MixinSteeringSystem");
+        if (parallelAllSystems || parallelSteering) {
+            forceEnable(disabled, "MixinStore");
+        }
+        if (parallelAllSystems) {
+            forceEnable(disabled, "MixinChunkReplicateChanges");
+            forceEnable(disabled, "MixinFluidReplicateChanges");
         }
 
         disabledMixins = disabled;
@@ -361,6 +382,13 @@ public class RefixesMixinPlugin implements IMixinConfigPlugin {
             return leaf.getAsBoolean();
         }
         return null;
+    }
+
+    private static void forceEnable(Set<String> disabled, String mixin) {
+        if (disabled.remove(mixin)) {
+            System.out.println("[Refixes] Parallel dependency: force-enabled " + mixin
+                    + " (required by an enabled Mixins.Experimental.Parallel toggle).");
+        }
     }
 
     private static void setBoolean(JsonObject root, String[] path, boolean value) {

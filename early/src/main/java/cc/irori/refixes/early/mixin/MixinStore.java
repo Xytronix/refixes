@@ -9,7 +9,10 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import java.lang.reflect.Constructor;
 import java.util.Deque;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 import org.spongepowered.asm.mixin.Final;
@@ -22,16 +25,32 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Thread-safety patches for Store:
- * 1. Relaxes assertThread() to allow ForkJoinWorkerThread (parallel entity ticking)
- * 2. Disables assertWriteProcessing() when parallel ticking is enabled
- * 3. Makes the command buffer pool (takeCommandBuffer/storeCommandBuffer) thread-safe
+ * Thread-safety relaxations for Experimental.Parallel.RelaxStoreAsserts: assertThread/assertWriteProcessing
+ * are logged per offending call site with a stack trace (rate-limited), and the command-buffer pool is
+ * synchronized. These only let parallel run; they do NOT make concurrent access safe.
  */
 @Mixin(Store.class)
 public abstract class MixinStore<ECS_TYPE> {
 
     @Unique
     private static final HytaleLogger refixes$LOGGER = Logs.logger();
+
+    // Bound stack-walk overhead: capture at most one violating call site per this interval, per assert kind.
+    @Unique
+    private static final long refixes$CAPTURE_INTERVAL_NANOS = 50_000_000L;
+
+    // Re-log a given call site at most once per this interval, so warnings never go permanently silent.
+    @Unique
+    private static final long refixes$RELOG_INTERVAL_NANOS = 300_000_000_000L;
+
+    @Unique
+    private static volatile long refixes$lastThreadCaptureNanos;
+
+    @Unique
+    private static volatile long refixes$lastWriteCaptureNanos;
+
+    @Unique
+    private static final Map<String, Long> refixes$siteLastLogNanos = new ConcurrentHashMap<>();
 
     @Shadow
     @Final
@@ -64,11 +83,16 @@ public abstract class MixinStore<ECS_TYPE> {
         }
     }
 
-    // Allow ForkJoinPool worker threads used by parallel entity ticking
+    // Allow ForkJoin workers (parallel ticking); warn instead of silently allowing.
     @Overwrite
     public void assertThread() {
         Thread currentThread = Thread.currentThread();
         if (currentThread instanceof ForkJoinWorkerThread) {
+            long now = System.nanoTime();
+            if (now - refixes$lastThreadCaptureNanos >= refixes$CAPTURE_INTERVAL_NANOS) {
+                refixes$lastThreadCaptureNanos = now;
+                refixes$reportRelaxed("assertThread");
+            }
             return;
         }
         if (!currentThread.equals(this.thread) && this.thread.isAlive()) {
@@ -78,7 +102,50 @@ public abstract class MixinStore<ECS_TYPE> {
 
     @Inject(method = "assertWriteProcessing", at = @At("HEAD"), cancellable = true)
     private void refixes$disableProcessingAssert(CallbackInfo ci) {
+        long now = System.nanoTime();
+        if (now - refixes$lastWriteCaptureNanos >= refixes$CAPTURE_INTERVAL_NANOS) {
+            refixes$lastWriteCaptureNanos = now;
+            refixes$reportRelaxed("assertWriteProcessing");
+        }
         ci.cancel();
+    }
+
+    // Logs each distinct violating call site once per RELOG_INTERVAL with a trimmed stack, so operators can
+    // see exactly which systems do unsafe concurrent access (and fix them) instead of a single generic line.
+    @Unique
+    private static void refixes$reportRelaxed(String assertName) {
+        String site = refixes$callSite();
+        String key = assertName + '|' + site;
+        long now = System.nanoTime();
+        Long prev = refixes$siteLastLogNanos.get(key);
+        if (prev != null && now - prev < refixes$RELOG_INTERVAL_NANOS) {
+            return;
+        }
+        refixes$siteLastLogNanos.put(key, now);
+        refixes$LOGGER
+                .atWarning()
+                .log(
+                        "%s",
+                        "Parallel ticking relaxed Store#" + assertName + " (thread "
+                                + Thread.currentThread().getName()
+                                + ") — engine thread-safety checks are downgraded; concurrent access is NOT made"
+                                + " safe. Make this call site thread-safe or disable"
+                                + " Experimental.Parallel.AllSystems.\n    at " + site);
+    }
+
+    @Unique
+    private static String refixes$callSite() {
+        return StackWalker.getInstance()
+                .walk(frames -> frames.map(StackWalker.StackFrame::toStackTraceElement)
+                        .filter(e -> {
+                            String c = e.getClassName();
+                            return !c.startsWith("java.")
+                                    && !c.startsWith("jdk.")
+                                    && !c.equals("cc.irori.refixes.early.mixin.MixinStore");
+                        })
+                        .limit(8)
+                        .map(StackTraceElement::toString)
+                        .collect(Collectors.joining("\n    at ")));
     }
 
     // synchronize the isEmpty + pop sequence

@@ -66,6 +66,10 @@ public class AiTickThrottlerService {
     private Query<EntityStore> npcQuery;
 
     private final Map<String, WorldState> worldStates = new ConcurrentHashMap<>();
+
+    private volatile String[] excludedTypesArray;
+    private volatile Set<String> excludedTypesSet;
+
     private ScheduledFuture<?> task;
     private volatile double lastCycleMs;
     private AutoCloseable throttledGauge;
@@ -147,6 +151,18 @@ public class AiTickThrottlerService {
         });
     }
 
+    private Set<String> resolveExcludedTypes(AiTickThrottlerConfig cfg) {
+        String[] arr = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES);
+        Set<String> cached = excludedTypesSet;
+        if (arr == excludedTypesArray && cached != null) {
+            return cached;
+        }
+        Set<String> built = arr.length == 0 ? Set.of() : Set.copyOf(Arrays.asList(arr));
+        excludedTypesArray = arr;
+        excludedTypesSet = built;
+        return built;
+    }
+
     private void throttle() {
         AiTickThrottlerConfig cfg = AiTickThrottlerConfig.get();
 
@@ -207,8 +223,7 @@ public class AiTickThrottlerService {
         // No players online: freeze all NPCs once, then skip subsequent cycles
         if (playerChunks.isEmpty()) {
             if (!state.frozenWithoutPlayers) {
-                Set<String> excludedNpcTypes =
-                        new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
+                Set<String> excludedNpcTypes = resolveExcludedTypes(cfg);
                 boolean excludeMountsOnEmpty = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_MOUNTS);
                 boolean excludeFlyingOnEmpty = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_FLYING);
                 freezeAllNpcs(store, excludedNpcTypes, excludeMountsOnEmpty, excludeFlyingOnEmpty);
@@ -234,16 +249,14 @@ public class AiTickThrottlerService {
 
         float minTick = cfg.getValue(AiTickThrottlerConfig.MIN_TICK_SECONDS);
 
-        // Pre-compute StepComponent instances for each tier to avoid per-entity allocation
-        float midSec = Math.max(minTick, cfg.getValue(AiTickThrottlerConfig.MID_TICK_SECONDS));
-        float farSec = Math.max(minTick, cfg.getValue(AiTickThrottlerConfig.FAR_TICK_SECONDS));
-        float veryFarSec = Math.max(minTick, cfg.getValue(AiTickThrottlerConfig.VERY_FAR_TICK_SECONDS));
-        StepComponent midStep = new StepComponent(midSec);
-        StepComponent farStep = new StepComponent(farSec);
-        StepComponent veryFarStep = new StepComponent(veryFarSec);
+        float rawMid = cfg.getValue(AiTickThrottlerConfig.MID_TICK_SECONDS);
+        float rawFar = cfg.getValue(AiTickThrottlerConfig.FAR_TICK_SECONDS);
+        float rawVeryFar = cfg.getValue(AiTickThrottlerConfig.VERY_FAR_TICK_SECONDS);
+        StepComponent midStep = new StepComponent(Math.max(minTick, rawMid));
+        StepComponent farStep = new StepComponent(Math.max(minTick, rawFar));
+        StepComponent veryFarStep = new StepComponent(Math.max(minTick, rawVeryFar));
 
-        Set<String> excludedNpcTypes =
-                new HashSet<>(Arrays.asList(cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDED_NPC_TYPES)));
+        Set<String> excludedNpcTypes = resolveExcludedTypes(cfg);
         boolean excludeMounts = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_MOUNTS);
         boolean excludeFlying = cfg.getValue(AiTickThrottlerConfig.THROTTLE_EXCLUDE_FLYING);
 
@@ -255,6 +268,9 @@ public class AiTickThrottlerService {
         long budgetNanos = maxCycleMs == 0 ? Long.MAX_VALUE : TimeUnit.MILLISECONDS.toNanos(maxCycleMs);
         long cycleStartNanos = System.nanoTime();
 
+        int shards = Math.max(1, cfg.getValue(AiTickThrottlerConfig.SCAN_SHARDS));
+        int shardIndex = Math.floorMod(state.shardCursor++, shards);
+
         store.forEachEntityParallel(npcQuery, (index, archetypeChunk, commandBuffer) -> {
             if (System.nanoTime() - cycleStartNanos > budgetNanos) {
                 return;
@@ -264,17 +280,24 @@ public class AiTickThrottlerService {
                 return;
             }
 
-            TransformComponent transform = archetypeChunk.getComponent(index, transformType);
             UUIDComponent uuid = archetypeChunk.getComponent(index, uuidType);
-            if (transform == null || uuid == null) {
+            if (uuid == null) {
+                return;
+            }
+            UUID entityId = uuid.getUuid();
+
+            if (Math.floorMod(entityId.hashCode(), shards) != shardIndex) {
                 return;
             }
 
-            // Compute chunk distance to nearest player
+            TransformComponent transform = archetypeChunk.getComponent(index, transformType);
+            if (transform == null) {
+                return;
+            }
+
             int entityChunkX = ChunkUtil.chunkCoordinate(transform.getPosition().x());
             int entityChunkZ = ChunkUtil.chunkCoordinate(transform.getPosition().z());
             int chunkDist = closestPlayerChunkDistance(entityChunkX, entityChunkZ, playerChunks);
-            UUID entityId = uuid.getUuid();
             state.seen.add(entityId);
 
             Ref<EntityStore> ref = archetypeChunk.getReferenceTo(index);
@@ -291,10 +314,16 @@ public class AiTickThrottlerService {
             // Not throttled → freeze at nearChunks + hysteresis (wider)
             double intervalSec;
             if (throttled) {
-                intervalSec = computeInterval(chunkDist, nearChunks, midChunks, farChunks, cfg);
+                intervalSec = computeInterval(chunkDist, nearChunks, midChunks, farChunks, rawMid, rawFar, rawVeryFar);
             } else {
                 intervalSec = computeInterval(
-                        chunkDist, nearChunks + hysteresis, midChunks + hysteresis, farChunks + hysteresis, cfg);
+                        chunkDist,
+                        nearChunks + hysteresis,
+                        midChunks + hysteresis,
+                        farChunks + hysteresis,
+                        rawMid,
+                        rawFar,
+                        rawVeryFar);
             }
 
             // If near enough, remove throttling
@@ -338,9 +367,10 @@ public class AiTickThrottlerService {
             }
         });
 
-        state.lastScanned = state.seen.size();
-        // Prune entries for entities no longer in the world
-        state.entries.keySet().retainAll(state.seen);
+        state.lastScanned = state.seen.size() * shards;
+        state.entries
+                .keySet()
+                .removeIf(id -> Math.floorMod(id.hashCode(), shards) == shardIndex && !state.seen.contains(id));
 
         int froze = Math.min(freezeCount.get(), maxFreezes);
         if (froze > 0) {
@@ -407,17 +437,17 @@ public class AiTickThrottlerService {
     }
 
     private static double computeInterval(
-            int chunkDist, int nearChunks, int midChunks, int farChunks, AiTickThrottlerConfig cfg) {
+            int chunkDist, int nearChunks, int midChunks, int farChunks, float rawMid, float rawFar, float rawVeryFar) {
         if (chunkDist <= nearChunks) {
             return 0.0;
         }
         if (chunkDist <= midChunks) {
-            return cfg.getValue(AiTickThrottlerConfig.MID_TICK_SECONDS);
+            return rawMid;
         }
         if (chunkDist <= farChunks) {
-            return cfg.getValue(AiTickThrottlerConfig.FAR_TICK_SECONDS);
+            return rawFar;
         }
-        return cfg.getValue(AiTickThrottlerConfig.VERY_FAR_TICK_SECONDS);
+        return rawVeryFar;
     }
 
     private static List<int[]> collectPlayerChunkPositions(Collection<PlayerRef> players) {
@@ -496,6 +526,7 @@ public class AiTickThrottlerService {
         final Set<UUID> seen = ConcurrentHashMap.newKeySet();
         boolean frozenWithoutPlayers;
         volatile int lastScanned;
+        int shardCursor;
     }
 
     private static final class AiLodEntry {

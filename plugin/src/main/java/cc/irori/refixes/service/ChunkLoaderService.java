@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.logger.sentry.SkipSentryException;
 import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
@@ -36,22 +37,36 @@ public class ChunkLoaderService {
         long chunkIndex = ChunkUtil.indexChunk(chunkX, chunkZ);
         String worldName = world.getName();
 
-        keptChunksByWorld
+        String previous = keptChunksByWorld
                 .computeIfAbsent(worldName, k -> new ConcurrentHashMap<>())
                 .put(chunkIndex, label != null ? label : "");
         save(worldName);
 
-        world.execute(() -> {
-            Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
-            if (chunkRef != null && chunkRef.isValid()) {
-                WorldChunk chunk =
-                        world.getChunkStore().getStore().getComponent(chunkRef, WorldChunk.getComponentType());
-                if (chunk != null) {
-                    chunk.addKeepLoaded();
-                    LOGGER.atInfo().log("Added chunk loader at %d, %d in world %s", chunkX, chunkZ, worldName);
-                }
-            }
-        });
+        if (previous == null) {
+            keepChunkLoaded(world, chunkIndex);
+        }
+        LOGGER.atInfo().log("Added chunk loader at %d, %d in world %s", chunkX, chunkZ, worldName);
+    }
+
+    private static void keepChunkLoaded(World world, long chunkIndex) {
+        ChunkStore chunkStore = world.getChunkStore();
+        chunkStore
+                .getChunkReferenceAsync(chunkIndex)
+                .thenAccept(chunkRef -> executeOnWorld(world, () -> {
+                    if (chunkRef != null && chunkRef.isValid()) {
+                        WorldChunk chunk = chunkStore.getStore().getComponent(chunkRef, WorldChunk.getComponentType());
+                        if (chunk != null) {
+                            chunk.addKeepLoaded();
+                        }
+                    }
+                }));
+    }
+
+    private static void executeOnWorld(World world, Runnable task) {
+        try {
+            world.execute(task);
+        } catch (SkipSentryException ignored) {
+        }
     }
 
     public void removeChunk(World world, int chunkX, int chunkZ) {
@@ -64,7 +79,7 @@ public class ChunkLoaderService {
             save(worldName);
         }
 
-        world.execute(() -> {
+        executeOnWorld(world, () -> {
             Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
             if (chunkRef != null && chunkRef.isValid()) {
                 WorldChunk chunk =
@@ -94,19 +109,10 @@ public class ChunkLoaderService {
         }
         save(worldName);
 
-        world.execute(() -> {
-            for (long chunkIndex : added) {
-                Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
-                if (chunkRef != null && chunkRef.isValid()) {
-                    WorldChunk chunk =
-                            world.getChunkStore().getStore().getComponent(chunkRef, WorldChunk.getComponentType());
-                    if (chunk != null) {
-                        chunk.addKeepLoaded();
-                    }
-                }
-            }
-            LOGGER.atInfo().log("Added %d chunk loaders in world %s", added.size(), worldName);
-        });
+        for (long chunkIndex : added) {
+            keepChunkLoaded(world, chunkIndex);
+        }
+        LOGGER.atInfo().log("Added %d chunk loaders in world %s", added.size(), worldName);
         return added.size();
     }
 
@@ -130,7 +136,7 @@ public class ChunkLoaderService {
         }
         save(worldName);
 
-        world.execute(() -> {
+        executeOnWorld(world, () -> {
             for (long chunkIndex : removed) {
                 Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
                 if (chunkRef != null && chunkRef.isValid()) {
@@ -147,7 +153,8 @@ public class ChunkLoaderService {
     }
 
     public Map<Long, String> getKeptChunks(String worldName) {
-        return keptChunksByWorld.getOrDefault(worldName, new ConcurrentHashMap<>());
+        Map<Long, String> chunks = keptChunksByWorld.get(worldName);
+        return chunks == null ? Map.of() : Map.copyOf(chunks);
     }
 
     public Long findChunkByLabel(String worldName, String label) {
@@ -170,23 +177,10 @@ public class ChunkLoaderService {
             return;
         }
 
-        world.execute(() -> {
-            int loaded = 0;
-            for (long chunkIndex : chunks.keySet()) {
-                Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
-                if (chunkRef != null && chunkRef.isValid()) {
-                    WorldChunk chunk =
-                            world.getChunkStore().getStore().getComponent(chunkRef, WorldChunk.getComponentType());
-                    if (chunk != null) {
-                        chunk.addKeepLoaded();
-                        loaded++;
-                    }
-                }
-            }
-            if (loaded > 0) {
-                LOGGER.atInfo().log("Loaded %d chunk loaders in world %s", loaded, worldName);
-            }
-        });
+        for (long chunkIndex : chunks.keySet()) {
+            keepChunkLoaded(world, chunkIndex);
+        }
+        LOGGER.atInfo().log("Loaded %d chunk loaders in world %s", chunks.size(), worldName);
     }
 
     public void unloadWorld(World world) {
@@ -196,7 +190,7 @@ public class ChunkLoaderService {
             return;
         }
 
-        world.execute(() -> {
+        executeOnWorld(world, () -> {
             for (long chunkIndex : chunks.keySet()) {
                 Ref<ChunkStore> chunkRef = world.getChunkStore().getChunkReference(chunkIndex);
                 if (chunkRef != null && chunkRef.isValid()) {

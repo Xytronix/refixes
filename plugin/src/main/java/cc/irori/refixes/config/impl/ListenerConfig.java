@@ -6,10 +6,16 @@ import cc.irori.refixes.config.field.ConfigField;
 
 public class ListenerConfig extends Configuration<ListenerConfig> {
 
-    public static final ConfigurationKey<ListenerConfig, Boolean> INSTANCE_POSITION_TRACKER =
-            new ConfigurationKey<>("InstancePositionTracker", ConfigField.BOOLEAN, true);
     public static final ConfigurationKey<ListenerConfig, Boolean> UNKNOWN_BLOCK_CLEANER =
             new ConfigurationKey<>("UnknownBlockCleaner", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<ListenerConfig, Boolean> UNKNOWN_BLOCK_CLEANER_SCAN_FLUIDS =
+            new ConfigurationKey<>("UnknownBlockCleanerScanFluids", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<ListenerConfig, Boolean> UNKNOWN_BLOCK_CLEANER_SCAN_CONTAINERS =
+            new ConfigurationKey<>("UnknownBlockCleanerScanContainers", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<ListenerConfig, Boolean> UNKNOWN_BLOCK_CLEANER_SCAN_PLAYER_INVENTORIES =
+            new ConfigurationKey<>("UnknownBlockCleanerScanPlayerInventories", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<ListenerConfig, String[]> UNKNOWN_BLOCK_CLEANER_EXCLUDE =
+            new ConfigurationKey<>("UnknownBlockCleanerExclude", ConfigField.STRING_ARRAY, new String[0]);
     public static final ConfigurationKey<ListenerConfig, Integer> UNKNOWN_BLOCK_CLEANER_BUDGET_MS =
             new ConfigurationKey<>("UnknownBlockCleanerBudgetMs", ConfigField.INTEGER, 10);
     public static final ConfigurationKey<ListenerConfig, Integer> UNKNOWN_BLOCK_CLEANER_INTERVAL_MS =
@@ -19,8 +25,11 @@ public class ListenerConfig extends Configuration<ListenerConfig> {
 
     public ListenerConfig() {
         register(
-                INSTANCE_POSITION_TRACKER,
                 UNKNOWN_BLOCK_CLEANER,
+                UNKNOWN_BLOCK_CLEANER_SCAN_FLUIDS,
+                UNKNOWN_BLOCK_CLEANER_SCAN_CONTAINERS,
+                UNKNOWN_BLOCK_CLEANER_SCAN_PLAYER_INVENTORIES,
+                UNKNOWN_BLOCK_CLEANER_EXCLUDE,
                 UNKNOWN_BLOCK_CLEANER_BUDGET_MS,
                 UNKNOWN_BLOCK_CLEANER_INTERVAL_MS);
     }

@@ -13,18 +13,38 @@ public class PerPlayerHotRadiusConfig extends Configuration<PerPlayerHotRadiusCo
     public static final ConfigurationKey<PerPlayerHotRadiusConfig, Integer> MIN_RADIUS =
             new ConfigurationKey<>("MinRadius", ConfigField.INTEGER, 2);
     public static final ConfigurationKey<PerPlayerHotRadiusConfig, Integer> MAX_RADIUS =
-            new ConfigurationKey<>("MaxRadius", ConfigField.INTEGER, 6);
-    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Float> TPS_LOW =
-            new ConfigurationKey<>("TPSLow", ConfigField.FLOAT, 22.5f);
-    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Float> TPS_HIGH =
-            new ConfigurationKey<>("TPSHigh", ConfigField.FLOAT, 27.0f);
-    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Integer> ADJUSTMENT_STEP =
-            new ConfigurationKey<>("AdjustmentStep", ConfigField.INTEGER, 1);
+            new ConfigurationKey<>("MaxRadius", ConfigField.INTEGER, 8);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Double> TPS_LOW_FRACTION =
+            new ConfigurationKey<>("TPSLowFraction", ConfigField.DOUBLE, 0.75);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Double> TPS_HIGH_FRACTION =
+            new ConfigurationKey<>("TPSHighFraction", ConfigField.DOUBLE, 0.90);
+
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Boolean> MEMORY_GUARD_ENABLED =
+            new ConfigurationKey<>("MemoryGuardEnabled", ConfigField.BOOLEAN, false);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Double> MEMORY_HEAP_THRESHOLD =
+            new ConfigurationKey<>("MemoryHeapThreshold", ConfigField.DOUBLE, 0.85);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Integer> MEMORY_MIN_VIEW_RADIUS =
+            new ConfigurationKey<>("MemoryMinViewRadius", ConfigField.INTEGER, 2);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Double> MEMORY_VIEW_DECREASE_FACTOR =
+            new ConfigurationKey<>("MemoryViewDecreaseFactor", ConfigField.DOUBLE, 0.75);
+    public static final ConfigurationKey<PerPlayerHotRadiusConfig, Integer> MEMORY_RECOVERY_WAIT_SECONDS =
+            new ConfigurationKey<>("MemoryRecoveryWaitSeconds", ConfigField.INTEGER, 60);
 
     private static final PerPlayerHotRadiusConfig INSTANCE = new PerPlayerHotRadiusConfig();
 
     public PerPlayerHotRadiusConfig() {
-        register(ENABLED, CHECK_INTERVAL_MS, MIN_RADIUS, MAX_RADIUS, TPS_LOW, TPS_HIGH, ADJUSTMENT_STEP);
+        register(
+                ENABLED,
+                CHECK_INTERVAL_MS,
+                MIN_RADIUS,
+                MAX_RADIUS,
+                TPS_LOW_FRACTION,
+                TPS_HIGH_FRACTION,
+                MEMORY_GUARD_ENABLED,
+                MEMORY_HEAP_THRESHOLD,
+                MEMORY_MIN_VIEW_RADIUS,
+                MEMORY_VIEW_DECREASE_FACTOR,
+                MEMORY_RECOVERY_WAIT_SECONDS);
     }
 
     public static PerPlayerHotRadiusConfig get() {

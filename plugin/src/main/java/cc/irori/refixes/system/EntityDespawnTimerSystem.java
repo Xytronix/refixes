@@ -8,9 +8,7 @@ import com.hypixel.hytale.component.RemoveReason;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.RefSystem;
-import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.BlockEntity;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.ProjectileComponent;
 import com.hypixel.hytale.server.core.modules.entity.DespawnComponent;
 import com.hypixel.hytale.server.core.modules.entity.item.ItemComponent;
@@ -22,7 +20,7 @@ import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 import org.checkerframework.checker.nullness.compatqual.NullableDecl;
 
 /**
- * Ensures dropped items, block entities and projectiles have a DespawnComponent.
+ * Adds or overrides DespawnComponent timers for dropped items, block entities and projectiles.
  *
  * Default timers (configurable via EntityDespawnTimerConfig):
  * Items → 5 minutes
@@ -39,41 +37,40 @@ public class EntityDespawnTimerSystem extends RefSystem<EntityStore> {
             @NonNullDecl Store<EntityStore> store,
             @NonNullDecl CommandBuffer<EntityStore> commandBuffer) {
 
-        if (store.getComponent(ref, Player.getComponentType()) != null) {
-            return;
-        }
-
         if (store.getComponent(ref, PreventPickup.getComponentType()) != null) {
             return;
         }
 
-        // For loaded entities, only fix null despawn timers (prevents engine NPE)
-        if (addReason == AddReason.LOAD) {
-            DespawnComponent existing = store.getComponent(ref, DespawnComponent.getComponentType());
-            if (existing != null && existing.getDespawn() == null) {
-                int seconds = resolveTimerSeconds(store, ref);
-                if (seconds > 0) {
-                    TimeResource time = commandBuffer.getResource(TimeResource.getResourceType());
-                    commandBuffer.putComponent(
-                            ref, DespawnComponent.getComponentType(), DespawnComponent.despawnInSeconds(time, seconds));
-                }
+        EntityDespawnTimerConfig config = EntityDespawnTimerConfig.get();
+        DespawnComponent existing = store.getComponent(ref, DespawnComponent.getComponentType());
+        if (existing != null) {
+            if (addReason == AddReason.LOAD || !config.getValue(EntityDespawnTimerConfig.OVERRIDE_EXISTING_TIMERS)) {
+                return;
+            }
+            int seconds = resolveTimerSeconds(config, store, ref);
+            if (seconds > 0) {
+                commandBuffer.putComponent(ref, DespawnComponent.getComponentType(), despawnIn(commandBuffer, seconds));
+            } else {
+                commandBuffer.removeComponent(ref, DespawnComponent.getComponentType());
             }
             return;
         }
 
-        int seconds = resolveTimerSeconds(store, ref);
-        if (seconds <= 0) {
+        if (addReason == AddReason.LOAD || !config.getValue(EntityDespawnTimerConfig.ADD_TIMER_WHEN_MISSING)) {
             return;
         }
-
-        TimeResource time = commandBuffer.getResource(TimeResource.getResourceType());
-        DespawnComponent despawn = DespawnComponent.despawnInSeconds(time, seconds);
-        commandBuffer.putComponent(ref, DespawnComponent.getComponentType(), despawn);
+        int seconds = resolveTimerSeconds(config, store, ref);
+        if (seconds > 0) {
+            commandBuffer.putComponent(ref, DespawnComponent.getComponentType(), despawnIn(commandBuffer, seconds));
+        }
     }
 
-    private int resolveTimerSeconds(Store<EntityStore> store, Ref<EntityStore> ref) {
-        EntityDespawnTimerConfig config = EntityDespawnTimerConfig.get();
+    private static DespawnComponent despawnIn(CommandBuffer<EntityStore> commandBuffer, int seconds) {
+        TimeResource time = commandBuffer.getResource(TimeResource.getResourceType());
+        return DespawnComponent.despawnInSeconds(time, seconds);
+    }
 
+    private int resolveTimerSeconds(EntityDespawnTimerConfig config, Store<EntityStore> store, Ref<EntityStore> ref) {
         if (store.getComponent(ref, ItemComponent.getComponentType()) != null) {
             return config.getValue(EntityDespawnTimerConfig.ITEM_DESPAWN_SECONDS);
         }
@@ -100,7 +97,10 @@ public class EntityDespawnTimerSystem extends RefSystem<EntityStore> {
     @NullableDecl
     @Override
     public Query<EntityStore> getQuery() {
-        // Match all entities that have a UUID
-        return UUIDComponent.getComponentType();
+        return Query.or(
+                ItemComponent.getComponentType(),
+                BlockEntity.getComponentType(),
+                ProjectileComponent.getComponentType(),
+                Projectile.getComponentType());
     }
 }
